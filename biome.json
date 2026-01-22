@@ -18,7 +18,10 @@
 		"enabled": true,
 
 		"rules": {
-			"recommended": true
+			"recommended": true,
+			"correctness": {
+				"noUnusedVariables": "warn"
+			}
 		}
 	},
 	"javascript": {
@@ -27,6 +30,11 @@
 			"enabled": true,
 			"semicolons": "always",
 			"trailingCommas": "all"
+		}
+	},
+	"css": {
+		"parser": {
+			"tailwindDirectives": true
 		}
 	},
 	"assist": {
