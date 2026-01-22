@@ -1,0 +1,15 @@
+{
+	"name": "@nodebase/ts-config",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"exports": {
+		"./base.json": "./base.json",
+		"./node.json": "./node.json",
+		"./react.json": "./react.json"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"packageManager": "pnpm@10.28.1"
+}
