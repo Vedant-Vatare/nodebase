@@ -48,6 +48,9 @@ importers:
       '@nodebase/ts-config':
         specifier: workspace:*
         version: link:../../packages/ts-config
+      '@nodebase/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@types/node':
         specifier: ^24.10.1
         version: 24.10.9
@@ -71,6 +74,12 @@ importers:
         version: 7.3.1(@types/node@24.10.9)(jiti@2.6.1)(lightningcss@1.30.2)
 
   packages/ts-config: {}
+
+  packages/types:
+    devDependencies:
+      '@nodebase/ts-config':
+        specifier: workspace:*
+        version: link:../ts-config
 
 packages:
 

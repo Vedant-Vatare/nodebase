@@ -1,0 +1,13 @@
+{
+	"name": "@nodebase/types",
+	"version": "1.0.0",
+	"description": "",
+	"devDependencies": {
+		"@nodebase/ts-config": "workspace:*"
+	},
+	"exports": "./src/index.ts",
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"packageManager": "pnpm@10.28.1"
+}
