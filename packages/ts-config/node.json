@@ -6,7 +6,6 @@
 		"module": "ESNext",
 		"lib": ["ES2023"],
 		"moduleResolution": "Bundler",
-		"types": ["node"],
-		"allowImportingTsExtensions": true
+		"types": ["node"]
 	}
 }
