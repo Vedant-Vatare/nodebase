@@ -1,0 +1,27 @@
+{
+	"name": "@nodebase/db",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"db:push": "pnpm exec drizzle-kit push",
+		"db:generate": "pnpm exec drizzle-kit generate",
+		"db:migrate": "pnpm exec drizzle-kit migrate"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"packageManager": "pnpm@10.28.1",
+	"dependencies": {
+		"dotenv": "^17.2.3",
+		"drizzle-orm": "^0.45.1",
+		"pg": "^8.17.2"
+	},
+	"devDependencies": {
+		"@nodebase/ts-config": "workspace:*",
+		"@types/node": "^25.0.10",
+		"@types/pg": "^8.16.0",
+		"drizzle-kit": "^0.31.8",
+		"tsx": "^4.21.0"
+	}
+}
