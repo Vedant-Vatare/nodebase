@@ -3,6 +3,8 @@
 	"version": "1.0.0",
 	"description": "",
 	"scripts": {
+		"build:db": "pnpm --filter @nodebase/db build",
+		"predev": "pnpm build:db && docker-compose up -d",
 		"dev": "pnpm -r run dev"
 	},
 	"keywords": [],
