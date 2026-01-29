@@ -7,6 +7,10 @@
 		"resolveJsonModule": true,
 		"isolatedModules": true,
 		"noUncheckedIndexedAccess": true,
-		"moduleDetection": "force"
+		"moduleDetection": "force",
+		"declaration": true,
+		"removeComments": true,
+
+		"declarationMap": true
 	}
 }
