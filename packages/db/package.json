@@ -3,7 +3,8 @@
 	"version": "1.0.0",
 	"type": "module",
 	"scripts": {
-		"build": "tsc -b",
+		"dev": "tsc -w",
+		"build": "tsc && tsc-alias",
 		"db:push": "pnpm exec drizzle-kit push",
 		"db:generate": "pnpm exec drizzle-kit generate",
 		"db:migrate": "pnpm exec drizzle-kit migrate"
@@ -11,7 +12,7 @@
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
-			"default": "./dist/index.js"
+			"import": "./dist/index.js"
 		}
 	},
 	"dependencies": {
@@ -23,7 +24,6 @@
 		"@nodebase/ts-config": "workspace:*",
 		"@types/node": "^25.0.10",
 		"@types/pg": "^8.16.0",
-		"drizzle-kit": "^0.31.8",
-		"tsx": "^4.21.0"
+		"drizzle-kit": "^0.31.8"
 	}
 }

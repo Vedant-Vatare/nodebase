@@ -8,4 +8,4 @@ export function createDb(pool: Pool) {
 	});
 }
 
-export * from "./db/schema";
+export * from "./db/schema.js";
