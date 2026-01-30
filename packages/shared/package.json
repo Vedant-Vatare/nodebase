@@ -1,10 +1,14 @@
 {
-	"name": "@nodebase/schemas",
+	"name": "@nodebase/shared",
 	"version": "1.0.0",
 	"description": "",
+	"main": "index.js",
+	"type": "module",
 	"scripts": {
-		"build": "tsc",
-		"dev": "tsc --watch"
+		"dev": "tsx --watch -r tsconfig-paths/register src/index.ts",
+		"build": "tsc && tsc-alias",
+		"start": "node dist/index.js",
+		"typecheck": "tsc --noEmit"
 	},
 	"exports": {
 		".": {
@@ -19,9 +23,12 @@
 	"packageManager": "pnpm@10.28.1",
 	"devDependencies": {
 		"@nodebase/ts-config": "workspace:*",
-		"@types/node": "^25.0.10"
+		"tsconfig-paths": "^4.2.0",
+		"tsx": "^4.21.0"
 	},
 	"dependencies": {
+		"@nodebase/db": "workspace:*",
+		"@types/node": "^25.0.10",
 		"zod": "^4.3.6"
 	}
 }
