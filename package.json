@@ -7,6 +7,7 @@
 		"predev": "pnpm build:db && docker-compose up -d",
 		"dev": "turbo run dev",
 		"build": "turbo run build",
+		"start": "turbo run start",
 		"typecheck": "turbo run typecheck",
 		"clean": "turbo run clean"
 	},
