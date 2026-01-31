@@ -21,7 +21,6 @@
 	},
 	"devDependencies": {
 		"@nodebase/ts-config": "workspace:*",
-		"@nodebase/types": "workspace:*",
 		"@types/node": "^25.0.10",
 		"@types/react": "^19.2.5",
 		"@types/react-dom": "^19.2.3",
