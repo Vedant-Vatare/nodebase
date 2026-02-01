@@ -15,8 +15,8 @@ export const usersTable = pgTable("users", {
 	email: varchar({ length: 255 }).notNull().unique(),
 	name: varchar({ length: 255 }).notNull(),
 	password: text(),
-	googleOauthId: varchar({ length: 255 }).unique(),
-	createdAt: timestamp().defaultNow(),
+	googleOauthId: varchar("google_oauth_id", { length: 255 }).unique(),
+	createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const nodesTable = pgTable("nodes", {
