@@ -8,3 +8,11 @@ export const userSignupSchema = z.object({
 		.min(8, { error: "password must be at least 8 characters long" })
 		.regex(/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$/),
 });
+
+export const userLoginSchema = z.object({
+	email: z.email({ error: "Invalid email field" }),
+	password: z
+		.string()
+		.min(8, { error: "password must be at least 8 characters long" })
+		.regex(/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$/),
+});

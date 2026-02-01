@@ -1,4 +1,5 @@
 import "dotenv/config";
+
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
@@ -10,5 +11,7 @@ export const db = drizzle({
 	client: pool,
 	casing: "snake_case",
 });
+
+export { eq } from "drizzle-orm";
 export { DrizzleQueryError } from "drizzle-orm/errors";
 export * from "./db/schema.js";

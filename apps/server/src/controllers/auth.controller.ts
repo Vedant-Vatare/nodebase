@@ -1,9 +1,13 @@
-import { db, usersTable } from "@nodebase/db";
-import type { userSignup } from "@nodebase/shared";
+import { db, eq, usersTable } from "@nodebase/db";
+import type { userLogin, userSignup } from "@nodebase/shared";
 import type { Request, Response } from "express";
 import createHttpError from "http-errors";
 import { isDBQueryError } from "@/utils/api.utils.js";
-import { bcryptHash, createJWT } from "@/utils/auth.utils.js";
+import {
+	bcryptCompareHash,
+	bcryptHash,
+	createJWT,
+} from "@/utils/auth.utils.js";
 
 export const Signup = async (req: Request, res: Response) => {
 	try {
@@ -31,8 +35,30 @@ export const Signup = async (req: Request, res: Response) => {
 		const queryError = isDBQueryError(e);
 
 		if (queryError?.code === "23505") {
-			throw createHttpError(400, "email already exists");
+			throw createHttpError.Conflict("email already exists");
 		}
 		throw e;
 	}
+};
+
+export const Login = async (req: Request, res: Response) => {
+	const { email, password } = req.body as userLogin;
+	const [user] = await db
+		.select({ id: usersTable.id, password: usersTable.password })
+		.from(usersTable)
+		.where(eq(usersTable.email, email))
+		.limit(1);
+
+	if (!user) {
+		throw new createHttpError.NotFound("User with email not found");
+	}
+	if (!user.password) throw createHttpError.BadRequest("invalid login method");
+
+	const isPasswordCorrect = await bcryptCompareHash(password, user.password);
+
+	if (!isPasswordCorrect)
+		throw new createHttpError.Unauthorized("invalid password");
+
+	const token = await createJWT({ userId: user.id });
+	return res.status(200).json({ mesage: "user login successful", token });
 };
