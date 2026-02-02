@@ -34,6 +34,38 @@ export const createNode: RequestHandler = async (
 	return res.status(201).json({ message: "node created successfully", node });
 };
 
+export const getAllNodes: RequestHandler = async (
+	_req: Request,
+	res: Response,
+) => {
+	const nodes = await db.select().from(nodesTable);
+	return res.status(200).json({ message: "fetched all nodes", nodes });
+};
+
+type partialsBaseNode = Partial<baseNode>;
+
+export const updateNode: RequestHandler = async (
+	req: Request,
+	res: Response,
+) => {
+	const nodeId = req.params.id as string;
+	const data = req.body as partialsBaseNode;
+
+	if (req.file) {
+		data.icon = await uploadFile(req.file);
+	}
+
+	const updatedNode = await db
+		.update(nodesTable)
+		.set(data)
+		.where(eq(nodesTable.id, nodeId))
+		.returning();
+
+	return res
+		.status(200)
+		.json({ message: "node updated successfully", updatedNode });
+};
+
 export const deleteNode: RequestHandler = async (
 	req: Request,
 	res: Response,

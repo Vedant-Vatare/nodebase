@@ -40,3 +40,5 @@ export const baseNodeSchema = z.object({
 	credentials: z.array(nodeCredentialSchema).optional(),
 	parameters: z.array(nodeParameterSchema),
 });
+
+export const updateBaseNodeSchema = baseNodeSchema.partial();
