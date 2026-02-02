@@ -25,7 +25,6 @@
 		"tsx": "^4.21.0"
 	},
 	"dependencies": {
-		"@nodebase/db": "workspace:*",
 		"zod": "^4.3.6"
 	}
 }

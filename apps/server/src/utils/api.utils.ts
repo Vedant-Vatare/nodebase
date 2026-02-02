@@ -22,6 +22,7 @@ export const validateRequest = (
 				message: "request field not assigned",
 			});
 		}
+		console.log(req.body);
 
 		const zodResponse = schema.safeParse(req[field]);
 
