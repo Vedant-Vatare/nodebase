@@ -9,11 +9,18 @@ import type {
 import { DatabaseError } from "pg";
 import { flattenError, type ZodObject } from "zod";
 
-type requestField = "body" | "params" | "query";
+type RequestField = "body" | "params" | "query";
+
+type ValidationOptions =
+	| {
+			parse: boolean;
+	  }
+	| Record<string, unknown>;
 
 export const validateRequest = (
 	schema: ZodObject,
-	field: requestField,
+	field: RequestField,
+	options: ValidationOptions = {},
 ): RequestHandler => {
 	return (req: Request, res: Response, next: NextFunction) => {
 		if (!field) {
@@ -22,17 +29,39 @@ export const validateRequest = (
 				message: "request field not assigned",
 			});
 		}
-		console.log(req.body);
 
-		const zodResponse = schema.safeParse(req[field]);
+		let data = req[field];
+
+		/* If request contains file uploads then parse the data field */
+		if (field === "body" && options.parse) {
+			if (!req.body.data) {
+				return res.status(400).json({
+					error: "MissingData",
+					message: "Expected data field in request body",
+				});
+			}
+
+			try {
+				data = JSON.parse(req.body.data);
+			} catch (e: unknown) {
+				console.log("JSON parse error:", e);
+				return res.status(400).json({
+					error: "InvalidJSON",
+					message: "Failed to parse request data",
+				});
+			}
+		}
+
+		const zodResponse = schema.safeParse(data);
 
 		if (!zodResponse.success) {
 			return res.status(400).json({
+				error: "ValidationError",
 				message: "Invalid data",
 				errors: flattenError(zodResponse.error),
 			});
 		}
-
+		req.body = zodResponse.data;
 		next();
 	};
 };

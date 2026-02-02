@@ -4,9 +4,9 @@
 	"type": "module",
 	"scripts": {
 		"dev": "tsc -w",
-		"build": "tsc && tsc-alias",
+		"build": "tsc -b  && tsc-alias",
 		"start": "node dist/index.js",
-		"db:push": "pnpm exec drizzle-kit push",
+		"db:push": "dotenv -e ../../.env -- drizzle-kit push",
 		"db:generate": "pnpm exec drizzle-kit generate",
 		"db:migrate": "dotenv -e ../../.env -- drizzle-kit migrate"
 	},
@@ -17,6 +17,7 @@
 		}
 	},
 	"dependencies": {
+		"@nodebase/shared": "workspace:*",
 		"dotenv": "^17.2.3",
 		"drizzle-orm": "^0.45.1",
 		"pg": "^8.17.2"

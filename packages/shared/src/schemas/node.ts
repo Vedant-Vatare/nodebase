@@ -35,7 +35,6 @@ export const nodeParameterSchema = z.object({
 export const baseNodeSchema = z.object({
 	name: z.string(),
 	task: z.string(),
-	icon: z.string(),
 	description: z.string(),
 	type: nodeTypesSchema,
 	credentials: z.array(nodeCredentialSchema).optional(),
