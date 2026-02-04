@@ -18,8 +18,13 @@ export const nodePropertyTypeSchema = z.enum([
 	"input",
 	"number",
 	"dropdown",
+	"checkbox",
 	"radio",
+	"textarea",
 	"boolean",
+	"key",
+	"key-value",
+	"array",
 	"date",
 ]);
 
@@ -27,18 +32,34 @@ export const nodeParameterSchema = z.object({
 	label: z.string(),
 	name: z.string(),
 	description: z.string().optional(),
+	placeholder: z.string().optional(),
 	type: nodePropertyTypeSchema,
-	values: z.array(z.string()),
+	value: z.unknown(),
 	default: z.string(),
+	required: z.boolean(),
+	multiValued: z.boolean(),
+	dependsOn: z.string().optional(),
+});
+
+export const nodeOutputSchema = z.object({
+	name: z.string(),
+	data: z.unknown(),
+});
+export const baseNodeSettingsSchema = z.object({
+	retryAfterFail: z.boolean(),
+	executeOnlyOnce: z.boolean(),
 });
 
 export const baseNodeSchema = z.object({
 	name: z.string(),
 	task: z.string(),
 	description: z.string(),
+	icon: z.string(),
 	type: nodeTypesSchema,
-	credentials: z.array(nodeCredentialSchema).optional(),
 	parameters: z.array(nodeParameterSchema),
+	outputs: z.array(nodeOutputSchema),
+	credentials: z.array(nodeCredentialSchema).optional(),
+	settings: baseNodeSettingsSchema.optional(),
 });
 
 export const updateBaseNodeSchema = baseNodeSchema.partial();

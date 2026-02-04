@@ -1,5 +1,5 @@
 import { db, eq, nodesTable } from "@nodebase/db";
-import type { baseNode } from "@nodebase/shared";
+import type { BaseNode } from "@nodebase/shared";
 import type { Request, RequestHandler, Response } from "express";
 import createHttpError from "http-errors";
 import { uploadFile } from "@/utils/uploads.utils.js";
@@ -18,7 +18,7 @@ export const createNode: RequestHandler = async (
 		throw createHttpError.InternalServerError("failed to upload image");
 	}
 
-	const nodeData = req.body as baseNode;
+	const nodeData = req.body as BaseNode;
 
 	const [node] = await db
 		.insert(nodesTable)
@@ -42,7 +42,7 @@ export const getAllNodes: RequestHandler = async (
 	return res.status(200).json({ message: "fetched all nodes", nodes });
 };
 
-type partialsBaseNode = Partial<baseNode>;
+type partialsBaseNode = Partial<BaseNode>;
 
 export const updateNode: RequestHandler = async (
 	req: Request,

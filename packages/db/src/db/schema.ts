@@ -1,4 +1,4 @@
-import type { nodeCredentials, nodeParameters } from "@nodebase/shared";
+import type { NodeCredentials, NodeParameters } from "@nodebase/shared";
 import {
 	jsonb,
 	pgEnum,
@@ -26,7 +26,7 @@ export const nodesTable = pgTable("nodes", {
 	task: varchar({ length: 255 }).unique().notNull(),
 	description: text().notNull(),
 	icon: text().notNull(),
-	parameters: jsonb().$type<nodeParameters[]>().notNull(),
-	credentials: jsonb().$type<nodeCredentials[]>(),
-	config: jsonb(),
+	parameters: jsonb().$type<NodeParameters[]>().notNull(),
+	credentials: jsonb().$type<NodeCredentials[]>(),
+	settings: jsonb(),
 });
