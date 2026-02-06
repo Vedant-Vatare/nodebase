@@ -1,5 +1,11 @@
-import type { NodeCredentials, NodeParameters } from "@nodebase/shared";
+import type {
+	NodeCredentials,
+	NodeParameters,
+	WorkflowConnection,
+	WorkflowNode,
+} from "@nodebase/shared";
 import {
+	integer,
 	jsonb,
 	pgEnum,
 	pgTable,
@@ -10,6 +16,13 @@ import {
 } from "drizzle-orm/pg-core";
 
 export const nodeTypeEnum = pgEnum("nodesEnum", ["action", "trigger"]);
+export const WorkflowStatusEnum = pgEnum("WorkflowStatusEnum", [
+	"active",
+	"stopped",
+	"running",
+	"executed",
+	"failed",
+]);
 
 export const usersTable = pgTable("users", {
 	id: uuid().defaultRandom().primaryKey(),
@@ -28,5 +41,20 @@ export const nodesTable = pgTable("nodes", {
 	icon: text().notNull(),
 	parameters: jsonb().$type<NodeParameters[]>().notNull(),
 	credentials: jsonb().$type<NodeCredentials[]>(),
-	settings: jsonb(),
+});
+
+export const workflowsTable = pgTable("workflows", {
+	id: uuid().defaultRandom().primaryKey(),
+	userId: uuid("user_id")
+		.references(() => usersTable.id)
+		.notNull(),
+	name: varchar({ length: 255 }).unique(),
+	description: text(),
+	status: WorkflowStatusEnum().$default(() => "active"),
+	nodes: jsonb().$type<WorkflowNode[]>(),
+	connections: jsonb().$type<WorkflowConnection[]>(),
+	executionCount: integer("execution_count").notNull().default(0),
+	lastExecutedAt: timestamp("last_executed_at"),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

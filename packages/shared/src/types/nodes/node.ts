@@ -1,7 +1,6 @@
 export type Override<T, U> = Omit<T, keyof U> & U;
 
 export type OverrideNodeParams<U> = Override<NodeParameters, U>;
-export type OverrideNodeSetts<U> = Override<BaseNodeSettings, U>;
 export type OverrideNodeCredentials<U> = Override<NodeCredentials, U>;
 
 export type NodeTypes =
@@ -51,11 +50,6 @@ export type NodeParameters = {
 	dependsOn?: parameterDepends[]; // ref to another property and value of a parameter
 };
 
-export type BaseNodeSettings = {
-	retryAfterFail: boolean;
-	executeOnlyOnce: boolean;
-};
-
 export type BaseNode = {
 	name: string;
 	task: string;
@@ -64,5 +58,4 @@ export type BaseNode = {
 	type: NodeTypes;
 	credentials?: NodeCredentials[];
 	parameters: NodeParameters[];
-	settings?: BaseNodeSettings;
 };
