@@ -1,3 +1,17 @@
+export type WorkflowStatus =
+	| "active"
+	| "stopped"
+	| "running"
+	| "executed"
+	| "failed";
+
+export type CreateWorkflow = {
+	name: string;
+	description: string;
+	status: "active";
+	executionCount: 0;
+};
+
 export type WorkflowNode = {
 	instanceId: string; // unique id for node in workflow
 	nodeId: string;

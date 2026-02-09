@@ -1,0 +1,51 @@
+import { db, eq, workflowsTable } from "@nodebase/db";
+import type { CreateWorkflow } from "@nodebase/shared";
+import type { Request, Response } from "express";
+import createHttpError from "http-errors";
+import { isDBQueryError } from "@/utils/api.utils.js";
+
+export const createWorkflow = async (req: Request, res: Response) => {
+	try {
+		const userId = res.locals.userId as string;
+		const workflow = req.body as CreateWorkflow;
+		const [userWorkflow] = await db
+			.insert(workflowsTable)
+			.values({ ...workflow, userId })
+			.returning();
+
+		return res
+			.status(201)
+			.json({ message: "user workflow created", userWorkflow });
+	} catch (e) {
+		const queryError = isDBQueryError(e);
+
+		if (queryError?.code === "23505") {
+			throw createHttpError.Conflict("workflow with the name already exists");
+		}
+		throw e;
+	}
+};
+
+export const getUserWorkflow = async (req: Request, res: Response) => {
+	const workflowId = req.params.id;
+
+	if (!workflowId || Array.isArray(workflowId))
+		throw createHttpError.BadRequest("invalid workflow id");
+
+	const userWorkflows = await db
+		.select()
+		.from(workflowsTable)
+		.where(eq(workflowsTable.id, workflowId));
+
+	return res
+		.status(200)
+		.json({ message: "user workflows fetched", userWorkflows });
+};
+
+export const getAllUserWorkflow = async (_req: Request, res: Response) => {
+	const userWorkflows = await db.select().from(workflowsTable);
+
+	return res
+		.status(200)
+		.json({ message: "all workflows fetched", userWorkflows });
+};
