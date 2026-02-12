@@ -1,3 +1,10 @@
+import type { z } from "zod";
+import type {
+	userWorkflowSchema,
+	workflowConnectionSchema,
+	workflowNodeSchema,
+} from "@/schemas/workflow.js";
+
 export type WorkflowStatus =
 	| "active"
 	| "stopped"
@@ -12,18 +19,6 @@ export type CreateWorkflow = {
 	executionCount: 0;
 };
 
-export type WorkflowNode = {
-	instanceId: string; // unique id for node in workflow
-	nodeId: string;
-	position: { x: number; y: number };
-	settings: Record<string, unknown>;
-};
-
-// stores the next node and the defines its output
-export type WorkflowConnection = {
-	id: string;
-	sourceNodeInstanceId: string;
-	targetNodeInstanceId: string;
-	sourceOutputName: string;
-	targetInputName: string;
-};
+export type UserWorkflow = z.infer<typeof userWorkflowSchema>;
+export type WorkflowNode = z.infer<typeof workflowNodeSchema>;
+export type WorkflowConnection = z.infer<typeof workflowConnectionSchema>;

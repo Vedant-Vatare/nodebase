@@ -53,8 +53,8 @@ export const userWorkflowsTable = pgTable(
 		status: WorkflowStatusEnum().$default(() => "active"),
 		executionCount: integer("execution_count").notNull().default(0),
 		lastExecutedAt: timestamp("last_executed_at"),
-		createdAt: timestamp("created_at").defaultNow().notNull(),
-		updatedAt: timestamp("updated_at").defaultNow().notNull(),
+		createdAt: timestamp("created_at").defaultNow(),
+		updatedAt: timestamp("updated_at").defaultNow(),
 	},
 	(t) => [index("user_id_idx").on(t.userId)],
 );
