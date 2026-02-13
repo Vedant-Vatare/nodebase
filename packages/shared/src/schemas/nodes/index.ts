@@ -9,9 +9,18 @@ export const nodeTypesSchema = z.enum([
 	"webhook",
 ]);
 
+export const nodeCredentialsEnum = z.enum([
+	"OAuth",
+	"API Keys",
+	"Bearer_Token",
+	"username_password",
+]);
+
 export const nodeCredentialSchema = z.object({
 	name: z.string(),
+	value: z.string(),
 	required: z.boolean(),
+	type: nodeCredentialsEnum,
 });
 
 export const nodePropertyTypeSchema = z.enum([
@@ -28,6 +37,11 @@ export const nodePropertyTypeSchema = z.enum([
 	"date",
 ]);
 
+export const parameterDependSchema = z.object({
+	parameter: z.string(),
+	values: z.array(z.unknown()),
+});
+
 export const nodeParameterSchema = z.object({
 	label: z.string(),
 	name: z.string(),
@@ -38,7 +52,7 @@ export const nodeParameterSchema = z.object({
 	default: z.string(),
 	required: z.boolean(),
 	multiValued: z.boolean(),
-	dependsOn: z.string().optional(),
+	dependsOn: z.array(parameterDependSchema).optional(),
 });
 
 export const nodeOutputPortsSchema = z.array(
@@ -68,7 +82,7 @@ export const baseNodeSchema = z.object({
 	parameters: z.array(nodeParameterSchema),
 	outputPorts: z.array(nodeOutputPortsSchema),
 	InputPorts: z.array(nodeInputPortsSchema),
-	credentials: z.array(nodeCredentialSchema).optional(),
+	credentials: nodeCredentialSchema.optional(),
 	settings: baseNodeSettingsSchema.optional(),
 });
 

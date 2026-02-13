@@ -32,11 +32,10 @@ export const workflowNodeSchema = baseNodeSchema.extend({
 	workflowId: z.string(),
 	nodeId: z.string(),
 	instanceId: z.string(),
-	position: z.object({
-		x: z.number(),
-		y: z.number(),
-	}),
+	positionX: z.number(),
+	positionY: z.number(),
 	settings: z.record(z.string(), z.unknown()),
+	outputs: z.array(z.object({ name: z.string(), label: z.string() })),
 });
 
 export const workflowConnectionSchema = z.object({

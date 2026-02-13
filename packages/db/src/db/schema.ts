@@ -78,7 +78,7 @@ export const workflowNodesTable = pgTable(
 		type: varchar({ length: 255 }),
 		credentials: jsonb().$type<NodeCredentials>(),
 		parameters: jsonb().$type<NodeParameters[]>(),
-		outputs: jsonb().$type<{ name: string; value: unknown }>().array(),
+		outputs: jsonb().$type<{ name: string; label: string }>().array(),
 	},
 	(t) => [
 		index("workflow_instance_ids_idx").on(t.workflowId, t.instanceId),
