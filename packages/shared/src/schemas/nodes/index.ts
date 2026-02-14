@@ -55,18 +55,15 @@ export const nodeParameterSchema = z.object({
 	dependsOn: z.array(parameterDependSchema).optional(),
 });
 
-export const nodeOutputPortsSchema = z.array(
-	z.object({
-		name: z.string(),
-		label: z.string(),
-	}),
-);
-export const nodeInputPortsSchema = z.array(
-	z.object({
-		name: z.string(),
-		label: z.string(),
-	}),
-);
+export const nodeOutputPortsSchema = z.object({
+	name: z.string(),
+	label: z.string(),
+});
+
+export const nodeInputPortsSchema = z.object({
+	name: z.string(),
+	label: z.string(),
+});
 
 export const baseNodeSettingsSchema = z.object({
 	retryAfterFail: z.boolean(),
