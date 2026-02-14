@@ -1,5 +1,5 @@
 {
-  "id": "40a20294-a9cc-40ef-b3d7-568ca8a30f1a",
+  "id": "f10bd73a-563d-442c-9698-79c121376cc7",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -27,27 +27,27 @@
           "primaryKey": false,
           "notNull": true
         },
-        "image": {
-          "name": "image",
+        "description": {
+          "name": "description",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "inputs": {
-          "name": "inputs",
-          "type": "json",
+        "icon": {
+          "name": "icon",
+          "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
-        "optional_inputs": {
-          "name": "optional_inputs",
-          "type": "json",
+        "parameters": {
+          "name": "parameters",
+          "type": "jsonb",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
-        "config": {
-          "name": "config",
-          "type": "json",
+        "credentials": {
+          "name": "credentials",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         }
@@ -142,16 +142,7 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {
-    "public.nodesEnum": {
-      "name": "nodesEnum",
-      "schema": "public",
-      "values": [
-        "action",
-        "trigger"
-      ]
-    }
-  },
+  "enums": {},
   "schemas": {},
   "sequences": {},
   "roles": {},

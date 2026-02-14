@@ -102,7 +102,7 @@ export const workflowConnectionsTable = pgTable(
 		sourceOutput: varchar({ length: 255 }),
 		targetInput: varchar({ length: 255 }),
 	},
-	(t) => [index("workflow_id_idx").on(t.workflowId)],
+	(t) => [index("workflow_conn_workflowId_idx").on(t.workflowId)],
 );
 
 export const workflowExecutionTable = pgTable(
@@ -120,7 +120,7 @@ export const workflowExecutionTable = pgTable(
 		completedAt: timestamp("started_at").notNull(),
 		result: text(),
 	},
-	(t) => [index("workflow_id_idx").on(t.workflowId)],
+	(t) => [index("workflow_exec_workflowId_idx").on(t.workflowId)],
 );
 
 export const nodeExecutionTable = pgTable(
@@ -136,7 +136,7 @@ export const nodeExecutionTable = pgTable(
 		output: jsonb().$type<unknown>(),
 	},
 	(t) => [
-		index("workflowId_idx").on(t.workflowId),
-		index("workflow_instance_ids_idx").on(t.workflowId, t.instanceId),
+		index("node_exec_workflowId_idx").on(t.workflowId),
+		index("node_exec_workflowInstanceIds_idx").on(t.workflowId, t.instanceId),
 	],
 );
