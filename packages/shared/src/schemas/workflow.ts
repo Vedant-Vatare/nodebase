@@ -28,9 +28,10 @@ export const createWorkflowSchema = z.object({
 	lastExecutedAt: z.iso.datetime().optional(),
 });
 
-export const workflowNodeSchema = baseNodeSchema.extend({
+export const workflowNodeSchema = baseNodeSchema.omit({ icon: true }).extend({
 	workflowId: z.string(),
 	nodeId: z.string(),
+	description: z.string().optional(),
 	instanceId: z.string(),
 	positionX: z.number(),
 	positionY: z.number(),

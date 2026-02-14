@@ -1,5 +1,5 @@
 import z from "zod";
-import { baseNodeSchema } from "./index.js";
+import { baseNodeSchema } from "./base.nodes.js";
 
 export const clickNodeSchema = baseNodeSchema.extend({
 	name: z.literal("click"),

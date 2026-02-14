@@ -1,9 +1,9 @@
 import z from "zod";
-import { baseNodeSchema, nodeParameterSchema } from "./index.js";
+import { baseNodeSchema, nodeParameterSchema } from "./base.nodes.js";
 
 export const httpNodeSchema = baseNodeSchema.extend({
 	name: z.literal("HTTP Request"),
-	task: z.literal("http.request"),
+	task: z.literal("action.http"),
 	type: z.literal("action"),
 	parameters: z.array(
 		z.discriminatedUnion("name", [
@@ -33,9 +33,9 @@ export const httpNodeSchema = baseNodeSchema.extend({
 				label: z.literal("Headers"),
 				name: z.literal("headers"),
 				type: z.literal("key-value"),
-				value: z.record(z.string(), z.string()),
+				value: z.array(z.record(z.string(), z.string())),
 				required: z.literal(false),
-				multiValued: z.literal(true),
+				multiValued: z.literal(true).optional(),
 			}),
 			nodeParameterSchema.extend({
 				label: z.literal("Body"),
@@ -43,12 +43,14 @@ export const httpNodeSchema = baseNodeSchema.extend({
 				type: z.literal("textarea"),
 				value: z.string(),
 				required: z.literal(false),
-				dependsOn: z.array(
-					z.object({
-						parameter: z.literal("method"),
-						values: z.array(z.enum(["POST", "PUT", "PATCH", "DELETE"])),
-					}),
-				),
+				dependsOn: z
+					.array(
+						z.object({
+							parameter: z.literal("method"),
+							values: z.array(z.enum(["POST", "PUT", "PATCH", "DELETE"])),
+						}),
+					)
+					.optional(),
 			}),
 		]),
 	),
