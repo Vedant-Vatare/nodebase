@@ -43,10 +43,14 @@ export const workflowNodeSchema = baseNodeSchema.omit({ icon: true }).extend({
 export const partialWorkflowNodeSchema = workflowNodeSchema.partial();
 
 export const workflowConnectionSchema = z.object({
-	id: z.string(),
+	id: z.string().optional(),
 	workflowId: z.string(),
 	sourceInstanceId: z.string(),
 	targetInstanceId: z.string(),
 	sourceOutput: z.string(),
 	targetInput: z.string(),
 });
+
+export const partialWorkflowConnectionSchema = workflowConnectionSchema
+	.partial()
+	.extend({ id: z.string() });

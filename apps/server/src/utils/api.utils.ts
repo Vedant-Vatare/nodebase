@@ -101,7 +101,7 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 	if (dbError) {
 		const errorCode = dbError.code as keyof typeof dbErrorMap;
 		const mappedError = dbErrorMap[errorCode];
-		console.log({ errorCode });
+		console.log({ errorCode, dbError });
 
 		if (mappedError) {
 			return res.status(mappedError.status).json({
