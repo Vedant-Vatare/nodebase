@@ -78,8 +78,12 @@ export const workflowNodesTable = pgTable(
 		type: varchar({ length: 255 }),
 		credentials: jsonb().$type<NodeCredentials>(),
 		parameters: jsonb().$type<NodeParameters[]>(),
-		outputPorts: jsonb().$type<{ name: string; label: string }>().array(),
-		inputPorts: jsonb().$type<{ name: string; label: string }>().array(),
+		outputPorts: jsonb("output_ports")
+			.$type<{ name: string; label: string }>()
+			.array(),
+		inputPorts: jsonb("input_ports")
+			.$type<{ name: string; label: string }>()
+			.array(),
 	},
 	(t) => [
 		index("workflow_instance_ids_idx").on(t.workflowId, t.instanceId),
@@ -100,8 +104,8 @@ export const workflowConnectionsTable = pgTable(
 		targetInstanceId: uuid("target_instance_id")
 			.references(() => workflowNodesTable.instanceId)
 			.notNull(),
-		sourceOutput: varchar({ length: 255 }),
-		targetInput: varchar({ length: 255 }),
+		sourceOutput: varchar("source_output", { length: 255 }),
+		targetInput: varchar("target_input", { length: 255 }),
 	},
 	(t) => [index("workflow_conn_workflowId_idx").on(t.workflowId)],
 );

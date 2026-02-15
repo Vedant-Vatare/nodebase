@@ -15,6 +15,20 @@
       "when": 1771008034570,
       "tag": "0001_clean_agent_zero",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771176233563,
+      "tag": "0002_dry_krista_starr",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1771176642273,
+      "tag": "0003_mute_shadow_king",
+      "breakpoints": true
     }
   ]
 }
