@@ -1,4 +1,4 @@
-import { db, eq, workflowsTable } from "@nodebase/db";
+import { db, eq, userWorkflowsTable } from "@nodebase/db";
 import type { CreateWorkflow } from "@nodebase/shared";
 import type { Request, Response } from "express";
 import createHttpError from "http-errors";
@@ -9,7 +9,7 @@ export const createWorkflow = async (req: Request, res: Response) => {
 		const userId = res.locals.userId as string;
 		const workflow = req.body as CreateWorkflow;
 		const [userWorkflow] = await db
-			.insert(workflowsTable)
+			.insert(userWorkflowsTable)
 			.values({ ...workflow, userId })
 			.returning();
 
@@ -34,8 +34,8 @@ export const getUserWorkflow = async (req: Request, res: Response) => {
 
 	const userWorkflows = await db
 		.select()
-		.from(workflowsTable)
-		.where(eq(workflowsTable.id, workflowId));
+		.from(userWorkflowsTable)
+		.where(eq(userWorkflowsTable.id, workflowId));
 
 	return res
 		.status(200)
@@ -43,7 +43,7 @@ export const getUserWorkflow = async (req: Request, res: Response) => {
 };
 
 export const getAllUserWorkflow = async (_req: Request, res: Response) => {
-	const userWorkflows = await db.select().from(workflowsTable);
+	const userWorkflows = await db.select().from(userWorkflowsTable);
 
 	return res
 		.status(200)

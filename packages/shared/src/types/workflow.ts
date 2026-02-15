@@ -1,5 +1,6 @@
 import type { z } from "zod";
 import type {
+	partialWorkflowNodeSchema,
 	userWorkflowSchema,
 	workflowConnectionSchema,
 	workflowNodeSchema,
@@ -21,4 +22,5 @@ export type CreateWorkflow = {
 
 export type UserWorkflow = z.infer<typeof userWorkflowSchema>;
 export type WorkflowNode = z.infer<typeof workflowNodeSchema>;
+export type PartialWorkflowNode = z.infer<typeof partialWorkflowNodeSchema>;
 export type WorkflowConnection = z.infer<typeof workflowConnectionSchema>;

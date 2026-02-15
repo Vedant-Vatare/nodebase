@@ -36,8 +36,11 @@ export const workflowNodeSchema = baseNodeSchema.omit({ icon: true }).extend({
 	positionX: z.number(),
 	positionY: z.number(),
 	settings: z.record(z.string(), z.unknown()),
-	outputs: z.array(z.object({ name: z.string(), label: z.string() })),
+	inputPorts: z.array(z.object({ name: z.string(), label: z.string() })),
+	outputPorts: z.array(z.object({ name: z.string(), label: z.string() })),
 });
+
+export const partialWorkflowNodeSchema = workflowNodeSchema.partial();
 
 export const workflowConnectionSchema = z.object({
 	id: z.string(),

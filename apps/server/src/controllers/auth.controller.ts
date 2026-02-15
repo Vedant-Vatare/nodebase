@@ -50,14 +50,14 @@ export const Login = async (req: Request, res: Response) => {
 		.limit(1);
 
 	if (!user) {
-		throw new createHttpError.NotFound("User with email not found");
+		throw createHttpError.NotFound("User with email not found");
 	}
 	if (!user.password) throw createHttpError.BadRequest("invalid login method");
 
 	const isPasswordCorrect = await bcryptCompareHash(password, user.password);
 
 	if (!isPasswordCorrect)
-		throw new createHttpError.Unauthorized("invalid password");
+		throw createHttpError.Unauthorized("invalid password");
 
 	const token = await createJWT({ userId: user.id });
 	return res.status(200).json({ mesage: "user login successful", token });

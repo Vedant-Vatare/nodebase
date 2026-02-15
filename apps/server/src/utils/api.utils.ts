@@ -87,6 +87,7 @@ export const isDBQueryError = (error: unknown): DatabaseError | null => {
 
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 	const dbErrorMap = {
+		"22P02": { status: 400, message: "the id provided is not in valid format" },
 		"23505": { status: 409, message: "Duplicate entry exists" },
 		"23503": { status: 400, message: "Referenced resource not found" },
 		"23502": { status: 400, message: "Required field is missing" },
@@ -100,6 +101,7 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 	if (dbError) {
 		const errorCode = dbError.code as keyof typeof dbErrorMap;
 		const mappedError = dbErrorMap[errorCode];
+		console.log({ errorCode });
 
 		if (mappedError) {
 			return res.status(mappedError.status).json({

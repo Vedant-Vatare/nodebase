@@ -38,7 +38,7 @@ export const nodesTable = pgTable("nodes", {
 	description: text().notNull(),
 	icon: text().notNull(),
 	parameters: jsonb().$type<NodeParameters[]>().notNull(),
-	credentials: jsonb().$type<NodeCredentials[]>(),
+	credentials: jsonb().$type<NodeCredentials>(),
 });
 
 export const userWorkflowsTable = pgTable(
@@ -78,7 +78,8 @@ export const workflowNodesTable = pgTable(
 		type: varchar({ length: 255 }),
 		credentials: jsonb().$type<NodeCredentials>(),
 		parameters: jsonb().$type<NodeParameters[]>(),
-		outputs: jsonb().$type<{ name: string; label: string }>().array(),
+		outputPorts: jsonb().$type<{ name: string; label: string }>().array(),
+		inputPorts: jsonb().$type<{ name: string; label: string }>().array(),
 	},
 	(t) => [
 		index("workflow_instance_ids_idx").on(t.workflowId, t.instanceId),
