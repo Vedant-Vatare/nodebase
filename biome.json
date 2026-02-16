@@ -7,7 +7,14 @@
 		"defaultBranch": "main"
 	},
 	"files": {
-		"ignoreUnknown": false
+		"ignoreUnknown": false,
+		"includes": [
+			"**",
+			"dist/**",
+			"!!.turbo",
+			"!db/drizzle",
+			"!!routeTree.gen.ts"
+		]
 	},
 	"formatter": {
 		"enabled": true,
@@ -16,7 +23,6 @@
 	},
 	"linter": {
 		"enabled": true,
-
 		"rules": {
 			"recommended": true,
 			"correctness": {
@@ -24,6 +30,7 @@
 			}
 		}
 	},
+
 	"javascript": {
 		"formatter": {
 			"quoteStyle": "double",
