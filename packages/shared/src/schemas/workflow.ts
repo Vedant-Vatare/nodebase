@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 import { baseNodeSchema } from "./nodes/index.js";
 
 const workflowStatusEnum = z.enum([

@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 import { baseNodeSchema } from "./base.nodes.js";
 
 export const clickNodeSchema = baseNodeSchema.extend({

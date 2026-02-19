@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 
 export const userSignupSchema = z.object({
 	name: z.string({ error: "Invalid name field" }),

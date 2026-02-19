@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 import { baseNodeSchema, nodeParameterSchema } from "./base.nodes.js";
 
 export const httpNodeSchema = baseNodeSchema.extend({
