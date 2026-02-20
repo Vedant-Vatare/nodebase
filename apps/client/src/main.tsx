@@ -1,29 +1,33 @@
-import { createRouter, RouterProvider } from '@tanstack/react-router'
-import { StrictMode } from 'react'
-import ReactDOM from 'react-dom/client'
-import { routeTree } from './routeTree.gen'
-import "./index.css"
+import { createRouter, RouterProvider } from "@tanstack/react-router";
+import { StrictMode } from "react";
+import ReactDOM from "react-dom/client";
+import { routeTree } from "./routeTree.gen";
+import "./index.css";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import App from "./App";
 
-const router = createRouter({ routeTree })
+const router = createRouter({ routeTree });
 
-declare module '@tanstack/react-router' {
-  interface Register {
-    router: typeof router
-  }
+declare module "@tanstack/react-router" {
+	interface Register {
+		router: typeof router;
+	}
 }
 
-const rootElement = document.getElementById('root')
-if (!rootElement) throw new Error("root element is not defined")
-
-
-
-
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("root element is not defined");
 
 if (!rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement)
-  root.render(
-    <StrictMode>
-      <RouterProvider router={router} />
-    </StrictMode>,
-  )
+	const queryClient = new QueryClient();
+	const root = ReactDOM.createRoot(rootElement);
+	root.render(
+		<StrictMode>
+			<QueryClientProvider client={queryClient}>
+				<RouterProvider router={router} />
+				<App />
+				<ReactQueryDevtools initialIsOpen={false} />
+			</QueryClientProvider>
+		</StrictMode>,
+	);
 }

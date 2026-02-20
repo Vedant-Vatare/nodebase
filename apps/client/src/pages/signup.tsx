@@ -1,5 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type userSignup, userSignupSchema } from "@nodebase/shared";
+import { EyeClosedIcon, EyeIcon } from "lucide-react";
+import { useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import GoogleIcon from "@/assets/icons/google.svg?react";
 import { Button } from "@/components/ui/button";
@@ -12,23 +14,29 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useSignupQuery } from "@/queries/auth";
 
 export const Signup = () => {
 	return (
-		<div className="bg-muted flex items-center justify-center min-h-screen px-4">
+		<div className="dark bg-muted flex items-center justify-center min-h-screen px-4">
 			<SignupForm />
 		</div>
 	);
 };
-
 const SignupForm = () => {
+	const { mutate } = useSignupQuery();
+
 	const form = useForm<userSignup>({
-		defaultValues: {},
+		defaultValues: {
+			name: "",
+			email: "",
+			password: "",
+		},
 		resolver: zodResolver(userSignupSchema),
 	});
 
-	const onSubmit: SubmitHandler<userSignup> = (data) => console.log(data);
-
+	const onSubmit: SubmitHandler<userSignup> = (data) => mutate(data);
+	const [showPassword, setShowPassword] = useState<boolean>(false);
 	return (
 		<div className="w-full max-w-md">
 			<Form {...form}>
@@ -88,7 +96,7 @@ const SignupForm = () => {
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>Email</FormLabel>
-									<FormControl>
+									<FormControl className="relative">
 										<Input
 											className="bg-background"
 											placeholder="you@example.com"
@@ -100,24 +108,38 @@ const SignupForm = () => {
 								</FormItem>
 							)}
 						/>
-						<FormField
-							control={form.control}
-							name="password"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Password</FormLabel>
-									<FormControl>
-										<Input
-											className="bg-background"
-											placeholder="Create a strong password"
-											type="password"
-											{...field}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+						<div className="relative ">
+							<FormField
+								control={form.control}
+								name="password"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Password</FormLabel>
+										<FormControl>
+											<div className="relative">
+												<Input
+													className="bg-background"
+													placeholder="Create a strong password"
+													type={showPassword ? "text" : "password"}
+													{...field}
+												/>
+												<div className="absolute right-1.5 top-1/2 -translate-y-1/2">
+													<Button
+														type="button"
+														variant="ghost"
+														size="icon-sm"
+														onClick={() => setShowPassword(!showPassword)}
+													>
+														{showPassword ? <EyeIcon /> : <EyeClosedIcon />}
+													</Button>
+												</div>
+											</div>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
 					</div>
 
 					<Button className="w-full h-10" type="submit">
@@ -128,7 +150,7 @@ const SignupForm = () => {
 						Already have an account?{" "}
 						<a
 							className="text-primary font-medium hover:underline"
-							href="auth/login"
+							href="/auth/login"
 						>
 							Sign in
 						</a>
