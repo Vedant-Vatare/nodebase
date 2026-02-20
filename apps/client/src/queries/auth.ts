@@ -1,14 +1,28 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { signup } from "@/apis/auth";
+import { loginApi, signupApi } from "@/apis/auth";
+import { getErrorMessage } from "@/utils/error";
+
 export const useSignupQuery = () =>
 	useMutation({
-		mutationFn: signup,
+		mutationFn: signupApi,
 		onSuccess: (response) => {
 			localStorage.setItem("token", response.data.token);
 		},
 		onError: (error) => {
-			console.log(error.message);
-			toast.error(error.message || "failed to signup");
+			const message = getErrorMessage(error);
+			toast.error(message);
+		},
+	});
+
+export const useLoginQuery = () =>
+	useMutation({
+		mutationFn: loginApi,
+		onSuccess: (response) => {
+			localStorage.setItem("token", response.data.token);
+		},
+		onError: (error) => {
+			const message = getErrorMessage(error);
+			toast.error(message);
 		},
 	});
