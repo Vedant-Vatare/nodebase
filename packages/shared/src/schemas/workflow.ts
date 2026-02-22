@@ -11,6 +11,7 @@ const workflowStatusEnum = z.enum([
 ]);
 
 export const userWorkflowSchema = z.object({
+	id: z.string(),
 	name: z.string(),
 	description: z.string(),
 	status: workflowStatusEnum.default("active"),

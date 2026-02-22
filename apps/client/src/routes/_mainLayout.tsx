@@ -1,14 +1,26 @@
-import { DashboardSquare01Icon, Workflow } from "@hugeicons/core-free-icons";
+import {
+	DashboardSquare01Icon,
+	DiscoverCircleIcon,
+	Settings01Icon,
+	TimelineListIcon,
+	Workflow,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import {
 	createFileRoute,
 	Link,
 	Outlet,
+	redirect,
 	useRouterState,
 } from "@tanstack/react-router";
-import { ChevronsUpDown, LogOut, Settings } from "lucide-react";
+import { ChevronRight, ChevronsUpDown, LogOut } from "lucide-react";
 import BrandIcon from "@/assets/icons/flowmation_temp.svg";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -26,12 +38,22 @@ import {
 	SidebarMenuBadge,
 	SidebarMenuButton,
 	SidebarMenuItem,
+	SidebarMenuSub,
+	SidebarMenuSubButton,
+	SidebarMenuSubItem,
 	SidebarProvider,
 	SidebarRail,
 	SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { useUserWorkflowQuery } from "@/queries/userWorkflows";
 
 export const Route = createFileRoute("/_mainLayout")({
+	beforeLoad: () => {
+		const token = localStorage.getItem("token");
+		if (!token) {
+			throw redirect({ to: "/auth/login" });
+		}
+	},
 	component: Layout,
 });
 
@@ -64,6 +86,8 @@ function NavItem({
 }
 
 function AppSidebar() {
+	const { data: userWorkflows } = useUserWorkflowQuery();
+
 	return (
 		<Sidebar collapsible="icon">
 			<SidebarRail />
@@ -91,20 +115,49 @@ function AppSidebar() {
 			<SidebarContent>
 				<SidebarGroup>
 					<SidebarGroupLabel>Menu</SidebarGroupLabel>
-					<SidebarMenu className="gap-1.5">
+					<SidebarMenu className="gap-2">
 						<NavItem
 							to="/dashboard"
 							label="Dashboard"
 							icon={DashboardSquare01Icon}
 						/>
-						<NavItem to="/workflows" label="Workflows" icon={Workflow} />
+						<SidebarMenuItem>
+							<Collapsible defaultOpen className="group/collapsible">
+								<CollapsibleTrigger asChild>
+									<SidebarMenuButton tooltip="Workflows">
+										<HugeiconsIcon icon={Workflow} strokeWidth={2} />
+										<span>Workflows</span>
+										<ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+									</SidebarMenuButton>
+								</CollapsibleTrigger>
+								<CollapsibleContent>
+									<SidebarMenuSub className="border-l-2 border-accent pl-0.5">
+										{userWorkflows?.map((workflow) => (
+											<SidebarMenuSubItem key={workflow.id}>
+												<SidebarMenuSubButton className="px-1.5" asChild>
+													<Link to={`/workflow/${workflow.id}`}>
+														<span className="truncate">{workflow.name}</span>
+													</Link>
+												</SidebarMenuSubButton>
+											</SidebarMenuSubItem>
+										))}
+									</SidebarMenuSub>
+								</CollapsibleContent>
+							</Collapsible>
+						</SidebarMenuItem>
 					</SidebarMenu>
 				</SidebarGroup>
 			</SidebarContent>
 
 			<SidebarFooter>
 				<SidebarMenu>
-					<SidebarMenuItem></SidebarMenuItem>
+					<NavItem to="/logs" label="Logs" icon={TimelineListIcon} />
+					<NavItem
+						to="/Templates"
+						label="Templates"
+						icon={DiscoverCircleIcon}
+					/>
+					<NavItem to="/settings" label="Settings" icon={Settings01Icon} />
 					<SidebarMenuItem>
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
@@ -127,12 +180,6 @@ function AppSidebar() {
 								</SidebarMenuButton>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent side="top" className="w-56" align="start">
-								<DropdownMenuItem asChild>
-									<Link to="/">
-										<Settings className="mr-2 size-4" />
-										Settings
-									</Link>
-								</DropdownMenuItem>
 								<DropdownMenuItem className="text-destructive focus:text-destructive">
 									<LogOut className="mr-2 size-4" />
 									Sign out
@@ -150,11 +197,11 @@ function Layout() {
 	return (
 		<SidebarProvider>
 			<AppSidebar />
-			<main className="flex h-full flex-col overflow-auto">
+			<main className="flex h-full flex-col overflow-auto w-full">
 				<header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
 					<SidebarTrigger className="-ml-1" />
 				</header>
-				<div className="flex-1 overflow-auto">
+				<div className="flex-1 overflow-auto ">
 					<Outlet />
 				</div>
 			</main>
