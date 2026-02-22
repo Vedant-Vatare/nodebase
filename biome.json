@@ -10,10 +10,10 @@
 		"ignoreUnknown": false,
 		"includes": [
 			"**",
-			"dist/**",
-			"!!.turbo",
-			"!db/drizzle",
-			"!!routeTree.gen.ts"
+			"!**/dist",
+			"!**/.turbo",
+			"!**/db/drizzle",
+			"!**/routeTree.gen.ts"
 		]
 	},
 	"formatter": {
