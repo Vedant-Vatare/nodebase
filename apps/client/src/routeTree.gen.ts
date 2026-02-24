@@ -14,6 +14,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as MainLayoutDashboardRouteImport } from './routes/_mainLayout/dashboard'
+import { Route as MainLayoutWorkflowWorkflowIdRouteImport } from './routes/_mainLayout/workflow/$workflowId'
 
 const MainLayoutRoute = MainLayoutRouteImport.update({
   id: '/_mainLayout',
@@ -39,18 +40,26 @@ const MainLayoutDashboardRoute = MainLayoutDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => MainLayoutRoute,
 } as any)
+const MainLayoutWorkflowWorkflowIdRoute =
+  MainLayoutWorkflowWorkflowIdRouteImport.update({
+    id: '/workflow/$workflowId',
+    path: '/workflow/$workflowId',
+    getParentRoute: () => MainLayoutRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof MainLayoutDashboardRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/workflow/$workflowId': typeof MainLayoutWorkflowWorkflowIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof MainLayoutDashboardRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/workflow/$workflowId': typeof MainLayoutWorkflowWorkflowIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -59,12 +68,23 @@ export interface FileRoutesById {
   '/_mainLayout/dashboard': typeof MainLayoutDashboardRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/_mainLayout/workflow/$workflowId': typeof MainLayoutWorkflowWorkflowIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/auth/login' | '/auth/signup'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/auth/login'
+    | '/auth/signup'
+    | '/workflow/$workflowId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/auth/login' | '/auth/signup'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/auth/login'
+    | '/auth/signup'
+    | '/workflow/$workflowId'
   id:
     | '__root__'
     | '/'
@@ -72,6 +92,7 @@ export interface FileRouteTypes {
     | '/_mainLayout/dashboard'
     | '/auth/login'
     | '/auth/signup'
+    | '/_mainLayout/workflow/$workflowId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -118,15 +139,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainLayoutDashboardRouteImport
       parentRoute: typeof MainLayoutRoute
     }
+    '/_mainLayout/workflow/$workflowId': {
+      id: '/_mainLayout/workflow/$workflowId'
+      path: '/workflow/$workflowId'
+      fullPath: '/workflow/$workflowId'
+      preLoaderRoute: typeof MainLayoutWorkflowWorkflowIdRouteImport
+      parentRoute: typeof MainLayoutRoute
+    }
   }
 }
 
 interface MainLayoutRouteChildren {
   MainLayoutDashboardRoute: typeof MainLayoutDashboardRoute
+  MainLayoutWorkflowWorkflowIdRoute: typeof MainLayoutWorkflowWorkflowIdRoute
 }
 
 const MainLayoutRouteChildren: MainLayoutRouteChildren = {
   MainLayoutDashboardRoute: MainLayoutDashboardRoute,
+  MainLayoutWorkflowWorkflowIdRoute: MainLayoutWorkflowWorkflowIdRoute,
 }
 
 const MainLayoutRouteWithChildren = MainLayoutRoute._addFileChildren(

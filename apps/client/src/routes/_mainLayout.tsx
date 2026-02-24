@@ -135,7 +135,10 @@ function AppSidebar() {
 										{userWorkflows?.map((workflow) => (
 											<SidebarMenuSubItem key={workflow.id}>
 												<SidebarMenuSubButton className="px-1.5" asChild>
-													<Link to={`/workflow/${workflow.id}`}>
+													<Link
+														to="/workflow/$workflowId"
+														params={{ workflowId: workflow.id }}
+													>
 														<span className="truncate">{workflow.name}</span>
 													</Link>
 												</SidebarMenuSubButton>
@@ -197,11 +200,11 @@ function Layout() {
 	return (
 		<SidebarProvider>
 			<AppSidebar />
-			<main className="flex h-full flex-col overflow-auto w-full">
+			<main className="flex flex-col flex-1 h-svh overflow-hidden">
 				<header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
 					<SidebarTrigger className="-ml-1" />
 				</header>
-				<div className="flex-1 overflow-auto ">
+				<div className="flex-1 min-h-0">
 					<Outlet />
 				</div>
 			</main>

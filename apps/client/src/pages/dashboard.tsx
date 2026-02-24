@@ -54,7 +54,6 @@ export const Dashboard = () => {
 	if (!userWorkflows) {
 		return null;
 	}
-	console.log(userWorkflows.length);
 
 	const activeWorkflows = userWorkflows.filter(
 		(w) => w.status === "active",
@@ -175,7 +174,8 @@ export const Dashboard = () => {
 								<TableRow key={workflow.id}>
 									<TableCell className="max-w-38">
 										<Link
-											to={`/`}
+											to={"/workflow/$workflowId"}
+											params={{ workflowId: workflow.id }}
 											className="font-medium hover:underline underline-offset-4 max-w-75 truncate block"
 										>
 											{workflow.name}
