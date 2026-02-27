@@ -13,12 +13,12 @@ export const useUserWorkflowQuery = () =>
 
 export const useWorkflowNodesQuery = (workflowId: string) =>
 	useQuery({
-		queryKey: [{ workflowId }],
+		queryKey: ["workflow-nodes", { workflowId }],
 		queryFn: () => getWorkflowNodes(workflowId),
 	});
 
 export const useWorkflowConnectionsQuery = (workflowId: string) =>
 	useQuery({
-		queryKey: [{ workflowId }],
+		queryKey: ["workflow-connections", { workflowId }],
 		queryFn: () => getWorkflowConnections(workflowId),
 	});

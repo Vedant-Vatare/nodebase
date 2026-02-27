@@ -9,12 +9,12 @@ import {
 } from "@/components/ui/sidebar";
 import {
 	ACTION_NODES_UI,
-	type Node_UI,
+	type NodeUI,
 	TRIGGER_NODES_UI,
 } from "@/constants/nodes";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
-const NodeItem = ({ node }: { node: Node_UI }) => {
+const NodeItem = ({ node }: { node: NodeUI }) => {
 	const Icon = node.icon;
 	return (
 		<div className="flex gap-2 items-center">
@@ -41,7 +41,7 @@ const Nodes = () => {
 					{TRIGGER_NODES_UI.map((node) => {
 						return (
 							<SidebarMenuItem
-								key={node.type}
+								key={node.name}
 								className="cursor-pointer hover:bg-background p-1.5 rounded-sm pl-2.5"
 							>
 								<NodeItem node={node} />
@@ -56,7 +56,7 @@ const Nodes = () => {
 					{ACTION_NODES_UI.map((node) => {
 						return (
 							<SidebarMenuItem
-								key={node.type}
+								key={node.name}
 								className="cursor-pointer hover:bg-background p-1.5 rounded-sm pl-2.5"
 							>
 								<NodeItem node={node} />

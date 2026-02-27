@@ -1,8 +1,10 @@
 import {
 	addEdge,
 	Background,
+	type Connection,
 	ConnectionMode,
 	Controls,
+	type Edge,
 	Handle,
 	MarkerType,
 	MiniMap,
@@ -16,23 +18,26 @@ import {
 	useNodesState,
 } from "@xyflow/react";
 import type React from "react";
-import { useCallback } from "react";
-import ClickIcon from "@/assets/icons/nodes/click.svg?react";
-import ConditionalIcon from "@/assets/icons/nodes/conditional.svg?react";
-import GoogleIcon from "@/assets/icons/nodes/google.svg?react";
-import SetVarIcon from "@/assets/icons/nodes/set-var.svg?react";
-import WaitIcon from "@/assets/icons/nodes/wait.svg?react";
+
+import { useCallback, useEffect } from "react";
+
 import "@xyflow/react/dist/style.css";
 
 import { Plus } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import HTTPIcon from "@/assets/icons/nodes/http.svg?react";
+
 import type {
 	NodeUI,
 	WorkflowCanvasNode,
 	WorkflowNodeData,
 } from "@/constants/nodes";
+import {
+	useWorkflowConnectionsQuery,
+	useWorkflowNodesQuery,
+} from "@/queries/userWorkflows";
+import { Route } from "@/routes/_mainLayout/workflow/$workflowId";
 import { withAlpha } from "@/utils/colors";
+import { toCanvasEdges, toCanvasNodes } from "@/utils/nodes";
 
 const WorkflowNode = ({
 	data,
@@ -140,185 +145,51 @@ const nodeTypes: NodeTypes = {
 	workflowNode: WorkflowNode,
 };
 
-const initialNodes: WorkflowCanvasNode[] = [
-	{
-		id: "1",
-		type: "workflowNode",
-		position: { x: 100, y: 100 },
-		data: {
-			name: "Click",
-			task: "event.click",
-			type: "trigger",
-			parameters: [],
-			workflowId: "wf-1",
-			nodeId: "node-1",
-			instanceId: "inst-1",
-			positionX: 100,
-			positionY: 100,
-			settings: {},
-			inputPorts: [],
-			outputPorts: [{ name: "out", label: "Output" }],
-			ui: {
-				name: "Click",
-				type: "event.click",
-				icon: ClickIcon,
-				background: "#0496ff",
-				color: "#ffffff",
-			},
-		},
-	},
-	{
-		id: "2",
-		type: "workflowNode",
-		position: { x: 300, y: 100 },
-		data: {
-			name: "HTTP Request",
-			task: "action.http",
-			type: "action",
-			parameters: [],
-			workflowId: "wf-1",
-			nodeId: "node-2",
-			instanceId: "inst-2",
-			positionX: 300,
-			positionY: 100,
-			settings: {},
-			inputPorts: [{ name: "in", label: "Input" }],
-			outputPorts: [{ name: "out", label: "Output" }],
-			ui: {
-				name: "HTTP Request",
-				type: "action.http",
-				icon: HTTPIcon,
-				background: "#736ced",
-				color: "#ffffff",
-			},
-		},
-	},
-	{
-		id: "3",
-		type: "workflowNode",
-		position: { x: 500, y: 0 },
-		data: {
-			name: "Google",
-			task: "action.google.search",
-			type: "action",
-			parameters: [],
-			workflowId: "wf-1",
-			nodeId: "node-3",
-			instanceId: "inst-3",
-			positionX: 500,
-			positionY: 0,
-			settings: {},
-			inputPorts: [{ name: "in", label: "Input" }],
-			outputPorts: [{ name: "out", label: "Output" }],
-			ui: {
-				name: "Google",
-				type: "action.google.search",
-				icon: GoogleIcon,
-				background: "linear-gradient(135deg, red, blue)",
-				color: "#ffffff",
-			},
-		},
-	},
-	{
-		id: "4",
-		type: "workflowNode",
-		position: { x: 500, y: 200 },
-		data: {
-			name: "Set Variable",
-			task: "action.set_variable",
-			type: "action",
-			parameters: [],
-			workflowId: "wf-1",
-			nodeId: "node-4",
-			instanceId: "inst-4",
-			positionX: 500,
-			positionY: 200,
-			settings: {},
-			inputPorts: [{ name: "in", label: "Input" }],
-			outputPorts: [{ name: "out", label: "Output" }],
-			ui: {
-				name: "Set Variable",
-				type: "action.set_variable",
-				icon: SetVarIcon,
-				background: "#119da4",
-				color: "#ffffff",
-			},
-		},
-	},
-	{
-		id: "5",
-		type: "workflowNode",
-		position: { x: 700, y: 100 },
-		data: {
-			name: "Condition",
-			task: "control.condition",
-			type: "action",
-			parameters: [],
-			workflowId: "wf-1",
-			nodeId: "node-5",
-			instanceId: "inst-5",
-			positionX: 700,
-			positionY: 100,
-			settings: {},
-			inputPorts: [{ name: "in", label: "Input" }],
-			outputPorts: [
-				{ name: "true", label: "True" },
-				{ name: "false", label: "False" },
-			],
-			ui: {
-				name: "Condition",
-				type: "control.condition",
-				icon: ConditionalIcon,
-				background: "#8338EC",
-				color: "#ffffff",
-			},
-		},
-	},
-	{
-		id: "6",
-		type: "workflowNode",
-		position: { x: 900, y: 100 },
-		data: {
-			name: "Wait",
-			task: "event.wait",
-			type: "trigger",
-			parameters: [],
-			workflowId: "wf-1",
-			nodeId: "node-6",
-			instanceId: "inst-6",
-			positionX: 900,
-			positionY: 100,
-			settings: {},
-			inputPorts: [{ name: "in", label: "Input" }],
-			outputPorts: [{ name: "out", label: "Output" }],
-			ui: {
-				name: "Wait",
-				type: "event.wait",
-				icon: WaitIcon,
-				background: "#FF9F1C",
-				color: "#ffffff",
-			},
-		},
-	},
-];
-
-const initialEdges = [
-	{ id: "e1-2", source: "1", target: "2" },
-	{ id: "e2-3", source: "2", target: "3" },
-	{ id: "e2-4", source: "2", target: "4" },
-	{ id: "e3-5", source: "3", target: "5" },
-	{ id: "e4-5", source: "4", target: "5" },
-	{ id: "e5-6", source: "5", target: "6" },
-];
 const WorkflowCanvas = () => {
-	const [nodes, _setNodes, onNodesChange] =
-		useNodesState<WorkflowCanvasNode>(initialNodes);
-	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+	const { workflowId } = Route.useParams();
+	const { data: workflowNodes, isLoading: nodesLoading } =
+		useWorkflowNodesQuery(workflowId);
+	const { data: workflowConnections, isLoading: connectionsLoading } =
+		useWorkflowConnectionsQuery(workflowId);
+
+	const [nodes, setNodes, onNodesChange] = useNodesState<WorkflowCanvasNode>(
+		[],
+	);
+	const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+
+	useEffect(() => {
+		if (!workflowNodes) return;
+		setNodes(toCanvasNodes(workflowNodes));
+	}, [workflowNodes, setNodes]);
+
+	useEffect(() => {
+		if (!workflowConnections) return;
+
+		setEdges(toCanvasEdges(workflowConnections));
+	}, [workflowConnections, setEdges]);
 
 	const onConnect = useCallback(
-		(params: any) => setEdges((eds) => addEdge(params, eds)),
-		[setEdges],
+		(params: Connection) => {
+			const sourceNode = nodes.find((n) => n.id === params.source);
+			const targetNode = nodes.find((n) => n.id === params.target);
+
+			console.log("=== CONNECTION ===");
+			console.log("source node data:", sourceNode?.data);
+			console.log("target node data:", targetNode?.data);
+			console.log("sourceHandle:", params.sourceHandle);
+			console.log("targetHandle:", params.targetHandle);
+			console.log("raw params:", params);
+
+			setEdges((eds) => addEdge(params, eds));
+		},
+		[setEdges, nodes],
 	);
+
+	if (nodesLoading || connectionsLoading) {
+		return <div>loading workflow</div>;
+	}
+
+	console.log({ edges, nodes });
 
 	return (
 		<div style={{ width: "100%", height: "100%" }}>
@@ -326,7 +197,6 @@ const WorkflowCanvas = () => {
 				nodes={nodes}
 				edges={edges}
 				nodeTypes={nodeTypes}
-				fitView
 				onNodesChange={onNodesChange}
 				onEdgesChange={onEdgesChange}
 				onConnect={onConnect}
