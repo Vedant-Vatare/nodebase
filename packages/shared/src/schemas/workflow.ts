@@ -11,45 +11,46 @@ const workflowStatusEnum = z.enum([
 ]);
 
 export const userWorkflowSchema = z.object({
-	id: z.string(),
+	id: z.uuid().default(() => crypto.randomUUID()),
 	name: z.string(),
-	description: z.string(),
+	description: z.string().optional(),
 	status: workflowStatusEnum.default("active"),
-	executionCount: z.number(),
+	executionCount: z.number().default(0),
 	lastExecutedAt: z.iso.datetime().optional(),
-	createdAt: z.iso.datetime(),
-	updatedAt: z.iso.datetime(),
+	createdAt: z.iso.datetime().default(() => new Date().toISOString()),
+	updatedAt: z.iso.datetime().default(() => new Date().toISOString()),
 });
 
 export const createWorkflowSchema = z.object({
 	name: z.string(),
-	description: z.string(),
-	status: z.literal("active").default("active"),
-	executionCount: z.literal(0).default(0),
-	lastExecutedAt: z.iso.datetime().optional(),
+	description: z.string().optional(),
+	status: workflowStatusEnum.default("active"),
 });
 
-export const workflowNodeSchema = baseNodeSchema.omit({ icon: true }).extend({
-	workflowId: z.string(),
-	nodeId: z.string(),
+export const workflowNodeSchema = baseNodeSchema.extend({
+	id: z.uuid().default(() => crypto.randomUUID()),
+	workflowId: z.uuid(),
+	nodeId: z.uuid(),
 	description: z.string().optional(),
-	instanceId: z.string(),
 	positionX: z.number(),
 	positionY: z.number(),
-	settings: z.record(z.string(), z.unknown()),
-	inputPorts: z.array(z.object({ name: z.string(), label: z.string() })),
-	outputPorts: z.array(z.object({ name: z.string(), label: z.string() })),
+	inputPorts: z
+		.array(z.object({ name: z.string(), label: z.string() }))
+		.default([{ name: "default", label: "Default" }]),
+	outputPorts: z
+		.array(z.object({ name: z.string(), label: z.string() }))
+		.default([{ name: "default", label: "Default" }]),
 });
 
 export const partialWorkflowNodeSchema = workflowNodeSchema.partial();
 
 export const workflowConnectionSchema = z.object({
-	id: z.string().optional(),
-	workflowId: z.string(),
-	sourceInstanceId: z.string(),
-	targetInstanceId: z.string(),
-	sourceOutput: z.string(),
-	targetInput: z.string(),
+	id: z.uuid().default(() => crypto.randomUUID()),
+	workflowId: z.uuid(),
+	sourceId: z.uuid(),
+	targetId: z.uuid(),
+	sourcePort: z.string().default("default"),
+	targetPort: z.string().default("default"),
 });
 
 export const partialWorkflowConnectionSchema = workflowConnectionSchema

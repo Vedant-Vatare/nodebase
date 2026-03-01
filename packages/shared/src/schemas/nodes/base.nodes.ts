@@ -1,13 +1,6 @@
 import { z } from "zod";
 
-export const nodeTypesSchema = z.enum([
-	"action",
-	"trigger",
-	"transform",
-	"cron",
-	"helper",
-	"webhook",
-]);
+export const nodeTypesSchema = z.enum(["action", "trigger"]);
 
 export const nodeCredentialsEnum = z.enum([
 	"OAuth",
@@ -31,10 +24,10 @@ export const nodePropertyTypeSchema = z.enum([
 	"radio",
 	"textarea",
 	"boolean",
-	"key",
 	"key-value",
 	"array",
 	"date",
+	"date-time",
 ]);
 
 export const parameterDependSchema = z.object({
@@ -71,10 +64,10 @@ export const baseNodeSettingsSchema = z.object({
 });
 
 export const baseNodeSchema = z.object({
+	id: z.uuid().default(() => crypto.randomUUID()),
 	name: z.string(),
 	task: z.string(),
 	description: z.string(),
-	icon: z.string().optional(),
 	type: nodeTypesSchema,
 	parameters: z.array(nodeParameterSchema),
 	outputPorts: z.array(nodeOutputPortsSchema).default([

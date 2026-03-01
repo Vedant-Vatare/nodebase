@@ -36,7 +36,7 @@ export const waitingNodeSchema = baseNodeSchema.extend({
 			z.object({
 				label: z.literal("Start on"),
 				name: z.literal("start"),
-				input: z.literal("dropdown"),
+				type: z.literal("dropdown"),
 				value: z.enum(["time_period", "date_time"]),
 				options: z.array(startOptionSchema),
 				default: z.literal("time_period").optional(),
@@ -46,7 +46,7 @@ export const waitingNodeSchema = baseNodeSchema.extend({
 			z.object({
 				label: z.literal("Wait time"),
 				name: z.literal("wait_time_period"),
-				input: z.literal("number"),
+				type: z.literal("number"),
 				value: z.number(),
 				default: z.literal("10").optional(),
 				required: z.literal(true).optional(),
@@ -61,7 +61,7 @@ export const waitingNodeSchema = baseNodeSchema.extend({
 			z.object({
 				label: z.literal("time unit"),
 				name: z.literal("time_unit"),
-				input: z.literal("dropdown"),
+				type: z.literal("dropdown"),
 				value: z.enum(["seconds", "minutes", "hours", "days"]),
 				options: z.array(timeUnitOptionSchema),
 				default: z.literal("seconds").optional(),
@@ -77,7 +77,7 @@ export const waitingNodeSchema = baseNodeSchema.extend({
 			z.object({
 				label: z.literal("At specific time"),
 				name: z.literal("date_time"),
-				input: z.literal("date-time"),
+				type: z.literal("date-time"),
 				value: z.string(),
 				required: z.literal(true).optional(),
 				dependsOn: z.tuple([

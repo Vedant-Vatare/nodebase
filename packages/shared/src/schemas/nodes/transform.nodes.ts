@@ -13,14 +13,14 @@ export const setVariableNodeSchema = baseNodeSchema.extend({
 			z.object({
 				label: z.literal("Variable Name"),
 				name: z.literal("variable_name"),
-				input: z.literal("text"),
+				input: z.literal("input"),
 				value: z.string().optional(),
 				required: z.literal(true).optional(),
 			}),
 			z.object({
 				label: z.literal("Value"),
 				name: z.literal("value"),
-				input: z.literal("text"),
+				input: z.literal("input"),
 				value: z.union([z.string(), z.number(), z.boolean()]).optional(),
 				required: z.literal(true).optional(),
 			}),

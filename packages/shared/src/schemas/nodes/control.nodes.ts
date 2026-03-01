@@ -14,7 +14,7 @@ export const comparisonOperatorsEnum = z.enum([
 
 export const conditionalNodeSchema = baseNodeSchema.extend({
 	name: z.literal("conditional node"),
-	type: z.literal("control"),
+	type: z.literal("action"),
 	task: z.literal("control.condition"),
 	parameters: z.array(
 		z.discriminatedUnion("name", [
