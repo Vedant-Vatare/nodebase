@@ -1,3 +1,4 @@
+import type { BaseNode } from "@nodebase/shared";
 import { useReactFlow } from "@xyflow/react";
 import {
 	Sidebar,
@@ -8,22 +9,20 @@ import {
 	SidebarMenuItem,
 	SidebarRail,
 } from "@/components/ui/sidebar";
-import {
-	ACTION_NODES,
-	createCanvasNode,
-	type NodeRegistryEntry,
-	TRIGGER_NODES,
-} from "@/constants/nodes";
+import type { NodeUI } from "@/constants/nodes";
+import { useSortedNodes } from "@/hooks/nodes";
+import { useAddWorkflowNode } from "@/queries/userWorkflows";
+import { createCanvasNode, getNodeUI } from "@/utils/nodes.utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 const NodeItem = ({
-	nodeData,
+	node,
 	onClick,
 }: {
-	nodeData: NodeRegistryEntry;
+	node: BaseNode;
 	onClick: () => void;
 }) => {
-	const { ui } = nodeData;
+	const ui: NodeUI = getNodeUI(node.task);
 	const Icon = ui.icon;
 
 	return (
@@ -39,44 +38,44 @@ const NodeItem = ({
 					background: ui.background ?? "#21212A",
 				}}
 			/>
-			<span>{ui.name}</span>
+			<span className="capitalize">{node.name}</span>
 		</button>
 	);
 };
 
 const Nodes = () => {
 	const { addNodes, getNodes, fitView } = useReactFlow();
-
-	const handleAddNode = (task: string) => {
+	const ALL_NODES = useSortedNodes();
+	useAddWorkflowNode();
+	const handleAddNode = (apiNode: BaseNode) => {
 		const nodes = getNodes();
 		const last = nodes[nodes.length - 1];
 		const position = last
 			? { x: last.position.x + 200, y: last.position.y }
 			: { x: 225, y: 225 };
 
-		const node = createCanvasNode(task, position);
+		const node = createCanvasNode(apiNode, position);
 		addNodes(node);
-		fitView({
-			padding: 20,
-			duration: 300,
-		});
-		// api call here too
-		console.log("adding node");
+		fitView({ padding: 20, duration: 300 });
 	};
+
+	if (!ALL_NODES) {
+		return (
+			<p className="text-sm text-muted-foreground px-4">Loading nodes...</p>
+		);
+	}
+
 	return (
 		<>
 			<SidebarGroup>
 				<SidebarGroupLabel>Triggers</SidebarGroupLabel>
 				<SidebarMenu className="gap-1 text-sm tracking-tight [word-spacing:0.125rem]">
-					{TRIGGER_NODES.map((entry: NodeRegistryEntry) => (
+					{ALL_NODES.triggers.map((node) => (
 						<SidebarMenuItem
-							key={entry.task}
+							key={node.task}
 							className="cursor-pointer hover:bg-background p-1.5 rounded-sm pl-2.5 transition-colors"
 						>
-							<NodeItem
-								nodeData={entry}
-								onClick={() => handleAddNode(entry.task)}
-							/>
+							<NodeItem node={node} onClick={() => handleAddNode(node)} />
 						</SidebarMenuItem>
 					))}
 				</SidebarMenu>
@@ -85,15 +84,12 @@ const Nodes = () => {
 			<SidebarGroup>
 				<SidebarGroupLabel>Actions</SidebarGroupLabel>
 				<SidebarMenu className="text-sm gap-1 tracking-tight">
-					{ACTION_NODES.map((entry: NodeRegistryEntry) => (
+					{ALL_NODES.actions.map((node) => (
 						<SidebarMenuItem
-							key={entry.task}
+							key={node.task}
 							className="cursor-pointer hover:bg-background p-1.5 rounded-sm pl-2.5 transition-colors"
 						>
-							<NodeItem
-								nodeData={entry}
-								onClick={() => handleAddNode(entry.task)}
-							/>
+							<NodeItem node={node} onClick={() => handleAddNode(node)} />
 						</SidebarMenuItem>
 					))}
 				</SidebarMenu>

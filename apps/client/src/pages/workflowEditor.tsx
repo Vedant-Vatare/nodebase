@@ -1,7 +1,7 @@
 import { ReactFlowProvider } from "@xyflow/react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import WorkflowCanvas from "@/components/workflow-editor/WorkflowCanvas";
-import { WorkflowEditorSidebar } from "@/components/workflow-editor/workflowEditorSidebar";
+import { WorkflowEditorSidebar } from "@/components/workflow-editor/WorkflowEditorSidebar";
 
 export const WorkflowEditorPage = () => {
 	return (

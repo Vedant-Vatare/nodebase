@@ -24,15 +24,18 @@ import "@xyflow/react/dist/style.css";
 import { Plus } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { WorkflowCanvasNode, WorkflowNodeData } from "@/constants/nodes";
-import { getNodeColorByTask } from "@/constants/nodes";
+
 import {
 	useWorkflowConnectionsQuery,
 	useWorkflowNodesQuery,
 } from "@/queries/userWorkflows";
 import { Route } from "@/routes/_mainLayout/workflow/$workflowId";
 import { withAlpha } from "@/utils/colors";
-import { toCanvasEdges, toCanvasNodes } from "@/utils/nodes.utils";
-import { registerAddNode } from "@/utils/workflowCanvas.utils";
+import {
+	getNodeColorByTask,
+	toCanvasEdges,
+	toCanvasNodes,
+} from "@/utils/nodes.utils";
 
 const WorkflowNode = ({
 	data,
@@ -49,7 +52,7 @@ const WorkflowNode = ({
 				background: bg,
 				borderColor: selected ? "#ffffff" : withAlpha(border, 0.4),
 			}}
-			className="group relative min-w-32 h-28 max-w-max rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all duration-200 border-2 hover:scale-105"
+			className="group relative min-w-32 h-28 max-w-max rounded-xl flex flex-col items-center justify-center gap-2  transition-all duration-200 border-2 hover:scale-105 cursor-grab"
 		>
 			{inputPorts?.map((port, i) => (
 				<Handle
@@ -156,12 +159,6 @@ const WorkflowCanvas = () => {
 	const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
 	useEffect(() => {
-		registerAddNode((node) => {
-			setNodes((prev) => [...prev, node]);
-		});
-	}, [setNodes]);
-
-	useEffect(() => {
 		if (!workflowNodes) return;
 		setNodes(toCanvasNodes(workflowNodes));
 	}, [workflowNodes, setNodes]);
@@ -211,6 +208,8 @@ const WorkflowCanvas = () => {
 						background: "hsl(var(--card))",
 						border: "1px solid hsl(var(--border))",
 						borderRadius: "12px",
+						bottom: "3rem",
+						right: "0.5rem",
 					}}
 					maskColor="hsl(var(--background) / 0.6)"
 					nodeColor={(n) =>
