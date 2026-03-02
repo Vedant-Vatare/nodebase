@@ -11,6 +11,7 @@ export const addNodeInWorkflow = async (req: Request, res: Response) => {
 		const [userWorkflowNode] = await db
 			.insert(workflowNodesTable)
 			.values({
+				id: node.id,
 				workflowId: node.workflowId,
 				nodeId: node.nodeId,
 				name: node.name,

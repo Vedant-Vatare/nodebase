@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { unknown, z } from "zod";
 import { baseNodeSchema, nodeParameterSchema } from "./base.nodes.js";
 
 export const httpNodeSchema = baseNodeSchema.extend({
@@ -54,4 +54,43 @@ export const httpNodeSchema = baseNodeSchema.extend({
 			}),
 		]),
 	),
+});
+
+export const mergeDataSchema = baseNodeSchema.extend({
+	name: z.literal("merge data"),
+	type: z.literal("action"),
+	task: z.literal("action.merge"),
+	parameters: [
+		{
+			name: z.literal("input1"),
+			type: z.literal("input"),
+			label: z.literal("Input 1"),
+			value: unknown,
+			required: z.boolean(),
+		},
+		{
+			name: z.literal("input2"),
+			type: z.literal("input"),
+			label: z.literal("Input 2"),
+			value: unknown,
+			required: z.boolean(),
+		},
+	],
+	credentials: null,
+	inputPorts: [
+		{
+			name: z.literal("input1"),
+			label: z.literal("Input 1"),
+		},
+		{
+			name: z.literal("input2"),
+			label: z.literal("Input 2"),
+		},
+	],
+	outputPorts: [
+		{
+			name: z.literal("default"),
+			label: z.literal("Default"),
+		},
+	],
 });

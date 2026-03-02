@@ -1,23 +1,10 @@
 import {
-	clickNodeSchema,
-	conditionalNodeSchema,
-	cronJobNodeSchema,
-	httpNodeSchema,
+	nodeSchemaRegistry,
 	type PartialWorkflowNode,
-	setVariableNodeSchema,
-	waitingNodeSchema,
 	workflowNodeSchema,
 } from "@nodebase/shared";
 import type { NextFunction, Request, Response } from "express";
-import { flattenError, type z } from "zod";
-export const nodeSchemaRegistry = new Map<string, z.ZodObject>([
-	["action.http", httpNodeSchema],
-	["control.condition", conditionalNodeSchema],
-	["event.click", clickNodeSchema],
-	["event.wait", waitingNodeSchema],
-	["trigger.cron", cronJobNodeSchema],
-	["action.set_variable", setVariableNodeSchema],
-]);
+import { flattenError } from "zod";
 
 type NodeValidationResult =
 	| { success: true; data: Record<string, unknown> }
@@ -74,6 +61,7 @@ export const validateNodeMiddleware = (
 	const validationResult = validateNodeSchema(req.body.node);
 
 	if (validationResult.success) {
+		req.body.node = validationResult.data;
 		next();
 	} else {
 		return res.status(400).json({
