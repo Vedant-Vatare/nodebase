@@ -10,6 +10,7 @@ import {
 	SidebarMenuItem,
 	SidebarRail,
 } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { NodeUI } from "@/constants/nodes";
 import { useSortedNodes } from "@/hooks/nodes";
 import { useAddWorkflowNode } from "@/queries/userWorkflows";
@@ -49,6 +50,32 @@ const NodeItem = ({
 	);
 };
 
+const NodeGroupSkeleton = ({
+	label,
+	widths,
+}: {
+	label: string;
+	widths: string[];
+}) => (
+	<SidebarGroup>
+		<SidebarGroupLabel>{label}</SidebarGroupLabel>
+		<SidebarMenu className="gap-1">
+			{widths.map((w, i) => (
+				// biome-ignore lint/suspicious/noArrayIndexKey: static skeleton rows
+				<SidebarMenuItem key={i} className="p-1.5 pl-2.5">
+					<div className="flex gap-2 items-center w-full">
+						<Skeleton className="h-6 w-6 rounded-sm shrink-0 opacity-40" />
+						<Skeleton
+							className="h-3.5 rounded-sm opacity-30"
+							style={{ width: w }}
+						/>
+					</div>
+				</SidebarMenuItem>
+			))}
+		</SidebarMenu>
+	</SidebarGroup>
+);
+
 const Nodes = () => {
 	const { workflowId } = Route.useParams();
 	const { addNodes, getNodes, fitView } = useReactFlow();
@@ -75,7 +102,13 @@ const Nodes = () => {
 
 	if (!ALL_NODES) {
 		return (
-			<p className="text-sm text-muted-foreground px-4">Loading nodes...</p>
+			<>
+				<NodeGroupSkeleton label="Triggers" widths={["62%", "78%", "55%"]} />
+				<NodeGroupSkeleton
+					label="Actions"
+					widths={["70%", "58%", "82%", "65%", "74%"]}
+				/>
+			</>
 		);
 	}
 
