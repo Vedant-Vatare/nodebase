@@ -101,10 +101,10 @@ export const workflowConnectionsTable = pgTable(
 			.references(() => userWorkflowsTable.id, { onDelete: "cascade" })
 			.notNull(),
 		sourceId: uuid("source_id")
-			.references(() => workflowNodesTable.id)
+			.references(() => workflowNodesTable.id, { onDelete: "cascade" })
 			.notNull(),
 		targetId: uuid("target_id")
-			.references(() => workflowNodesTable.id)
+			.references(() => workflowNodesTable.id, { onDelete: "cascade" })
 			.notNull(),
 		sourcePort: varchar("source_port", { length: 255 }),
 		targetPort: varchar("target_port", { length: 255 }),

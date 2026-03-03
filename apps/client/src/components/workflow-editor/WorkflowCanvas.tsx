@@ -11,6 +11,7 @@ import {
 	type Node,
 	type NodeProps,
 	type NodeTypes,
+	type OnEdgesDelete,
 	Position,
 	ReactFlow,
 	reconnectEdge,
@@ -25,7 +26,10 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import type { WorkflowCanvasNode, WorkflowNodeData } from "@/constants/nodes";
 import { useDebounce } from "@/hooks/debouce";
 import {
+	useAddWorkflowConn,
+	useDeleteWorkflowConn,
 	useDeleteWorkflowNode,
+	useUpdateWorkflowConn,
 	useUpdateWorkflowNode,
 	useWorkflowConnectionsQuery,
 	useWorkflowNodesQuery,
@@ -155,6 +159,9 @@ const WorkflowCanvas = () => {
 		useWorkflowConnectionsQuery(workflowId);
 	const { mutate: updateNode } = useUpdateWorkflowNode();
 	const { mutate: deleteNode } = useDeleteWorkflowNode();
+	const { mutate: createNewConnection } = useAddWorkflowConn();
+	const { mutate: updateConnection } = useUpdateWorkflowConn();
+	const { mutate: deleteConnection } = useDeleteWorkflowConn();
 	const [nodes, setNodes, onNodesChange] = useNodesState<WorkflowCanvasNode>(
 		[],
 	);
@@ -171,10 +178,62 @@ const WorkflowCanvas = () => {
 	}, [workflowConnections, setEdges]);
 
 	const onConnect = useCallback(
-		(params: Connection) => {
-			setEdges((eds) => addEdge(params, eds));
+		(connection: Connection) => {
+			if (!connection.sourceHandle || !connection.targetHandle) return null;
+			setEdges((eds) => addEdge(connection, eds));
+			createNewConnection({
+				id: crypto.randomUUID(),
+				workflowId: workflowId,
+				sourceId: connection.source,
+				targetId: connection.target,
+				sourcePort: connection.sourceHandle,
+				targetPort: connection.targetHandle,
+			});
 		},
-		[setEdges],
+		[setEdges, createNewConnection, workflowId],
+	);
+
+	const isConnectionChanged = useCallback(
+		(oldEdge: Edge, newConnection: Connection) => {
+			return !(
+				oldEdge.source === newConnection.source &&
+				oldEdge.sourceHandle === newConnection.sourceHandle &&
+				oldEdge.target === newConnection.target &&
+				oldEdge.targetHandle === newConnection.targetHandle
+			);
+		},
+		[],
+	);
+
+	const onReconnect = useCallback(
+		(oldEdge: Edge, newConnection: Connection) => {
+			if (
+				!isConnectionChanged(oldEdge, newConnection) ||
+				!newConnection.sourceHandle ||
+				!newConnection.targetHandle
+			)
+				return null;
+
+			setEdges((eds) => reconnectEdge(oldEdge, newConnection, eds));
+			updateConnection({
+				id: oldEdge.id,
+				workflowId: workflowId,
+				sourceId: newConnection.source,
+				targetId: newConnection.target,
+				sourcePort: newConnection.sourceHandle,
+				targetPort: newConnection.targetHandle,
+			});
+		},
+		[setEdges, isConnectionChanged, workflowId, updateConnection],
+	);
+
+	const onEdgesDelete: OnEdgesDelete<Edge> = useCallback(
+		(deletedEdges) => {
+			for (const edge of deletedEdges) {
+				deleteConnection({ id: edge.id });
+			}
+		},
+		[deleteConnection],
 	);
 
 	const onNodesDelete = useCallback(
@@ -188,8 +247,6 @@ const WorkflowCanvas = () => {
 
 	const saveNodePosition = useCallback(
 		(canvasNode: WorkflowCanvasNode) => {
-			console.log("updating node:", canvasNode.id);
-
 			updateNode({
 				id: canvasNode.id,
 				task: canvasNode.data.task,
@@ -216,16 +273,22 @@ const WorkflowCanvas = () => {
 				edges={edges}
 				nodeTypes={nodeTypes}
 				fitView={true}
-				maxZoom={1.5}
-				fitViewOptions={{ duration: 250, padding: 0.75, minZoom: 1 }}
+				fitViewOptions={{
+					duration: 250,
+					padding: 0.75,
+					minZoom: 1,
+					maxZoom: 1,
+				}}
+				maxZoom={1.25}
+				minZoom={0.5}
 				onNodesChange={onNodesChange}
 				onNodesDelete={onNodesDelete}
 				onNodeDragStop={(_e, node) => debouncedSaveNode(node)}
 				onEdgesChange={onEdgesChange}
+				onEdgesDelete={onEdgesDelete}
 				onConnect={onConnect}
-				onReconnect={(oldEdge, newConnection) => {
-					setEdges((eds) => reconnectEdge(oldEdge, newConnection, eds));
-				}}
+				onReconnect={onReconnect}
+				connectionRadius={20}
 				connectionMode={ConnectionMode.Strict}
 				deleteKeyCode="Delete"
 				panOnDrag={[1]}

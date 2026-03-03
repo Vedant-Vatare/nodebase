@@ -12,10 +12,10 @@ import {
 export const nodeSchemaRegistry = new Map<string, z.ZodObject>([
 	["action.http", httpNodeSchema],
 	["action.merge", mergeDataSchema],
+	["action.delay", waitingNodeSchema],
 	["action.set_variable", setVariableNodeSchema],
 	["trigger.input", InputNodeSchema],
 	["trigger.cron", cronJobNodeSchema],
 	["event.click", clickNodeSchema],
-	["event.wait", waitingNodeSchema],
 	["control.condition", conditionalNodeSchema],
 ]);

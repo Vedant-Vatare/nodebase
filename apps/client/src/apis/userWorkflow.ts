@@ -53,3 +53,28 @@ export const updateWorkflowNodeApi = async (node: PartialWorkflowNode) => {
 	});
 	return response.data.updatedNode as WorkflowNode;
 };
+
+export const addWorkflowNodeConnApi = async (
+	workflowConnection: WorkflowConnection,
+) => {
+	const response = await api.post("/workflow-connections/", {
+		...workflowConnection,
+	});
+
+	return response.data.workflowConnection as WorkflowConnection;
+};
+
+export const deleteWorkflowConnApi = async (id: string) => {
+	const response = await api.delete(`/workflow-connections/${id}`);
+	return response.data;
+};
+
+export const updateWorkflowNodeConnApi = async (
+	workflowConnection: WorkflowConnection,
+) => {
+	const response = await api.patch("/workflow-connections/", {
+		...workflowConnection,
+	});
+
+	return response.data.updatedNodeConnection as WorkflowConnection;
+};

@@ -2,11 +2,14 @@ import type { PartialWorkflowNode, WorkflowNode } from "@nodebase/shared";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
 	addWorkflowNodeApi,
+	addWorkflowNodeConnApi,
+	deleteWorkflowConnApi,
 	deleteWorkflowNodeApi,
 	getUserWorkflowsApi,
 	getWorkflowConnections,
 	getWorkflowNodes,
 	updateWorkflowNodeApi,
+	updateWorkflowNodeConnApi,
 } from "@/apis/userWorkflow";
 
 export const useUserWorkflowQuery = () =>
@@ -41,4 +44,19 @@ export const useDeleteWorkflowNode = () =>
 export const useUpdateWorkflowNode = () =>
 	useMutation({
 		mutationFn: (node: PartialWorkflowNode) => updateWorkflowNodeApi(node),
+	});
+
+export const useAddWorkflowConn = () =>
+	useMutation({
+		mutationFn: addWorkflowNodeConnApi,
+	});
+
+export const useDeleteWorkflowConn = () =>
+	useMutation({
+		mutationFn: ({ id }: { id: string }) => deleteWorkflowConnApi(id),
+	});
+
+export const useUpdateWorkflowConn = () =>
+	useMutation({
+		mutationFn: updateWorkflowNodeConnApi,
 	});
