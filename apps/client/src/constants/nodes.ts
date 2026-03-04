@@ -38,6 +38,8 @@ export type WorkflowNodeData = Pick<
 	| "workflowId"
 	| "credentials"
 	| "settings"
+	| "positionX"
+	| "positionY"
 > & { ui: NodeUI };
 
 export type WorkflowCanvasNode = Node<WorkflowNodeData>;

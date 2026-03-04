@@ -1,6 +1,6 @@
 import type { BaseNode } from "@nodebase/shared";
 import { useReactFlow } from "@xyflow/react";
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import {
 	Sidebar,
 	SidebarContent,
@@ -15,6 +15,8 @@ import type { NodeUI } from "@/constants/nodes";
 import { useSortedNodes } from "@/hooks/nodes";
 import { useAddWorkflowNode } from "@/queries/userWorkflows";
 import { Route } from "@/routes/_mainLayout/workflow/$workflowId";
+import { useWorkflowSidbarTabsStore } from "@/store/workflow/useWorkflowEditor";
+import { useWorkflowStore } from "@/store/workflow/useWorkflowStore";
 import {
 	createCanvasNode,
 	createWorkflowNode,
@@ -76,12 +78,11 @@ const NodeGroupSkeleton = ({
 	</SidebarGroup>
 );
 
-const Nodes = () => {
+const Nodes = memo(() => {
 	const { workflowId } = Route.useParams();
 	const { addNodes, getNodes, fitView } = useReactFlow();
 	const ALL_NODES = useSortedNodes();
 	const { mutate } = useAddWorkflowNode();
-
 	const handleAddNode = useCallback(
 		(apiNode: BaseNode) => {
 			const nodes = getNodes();
@@ -143,21 +144,33 @@ const Nodes = () => {
 			</SidebarGroup>
 		</>
 	);
-};
+});
 
 const NodeEditor = () => {
-	return <p className="text-sm text-muted-foreground">Select a node to edit</p>;
+	const { selectedNode } = useWorkflowStore();
+	if (!selectedNode) {
+		return (
+			<p className="text-sm text-muted-foreground">Select a node to edit</p>
+		);
+	}
+	return <p>{selectedNode.name}</p>;
 };
 
 export const WorkflowEditorSidebar = () => {
+	const { tabOpen, setTabOpen } = useWorkflowSidbarTabsStore();
+
 	return (
 		<Sidebar side="right" collapsible="offcanvas" className="h-screen">
 			<SidebarRail />
 			<SidebarContent className="mt-10 pl-1">
-				<Tabs defaultValue="nodes">
+				<Tabs defaultValue="editor" value={tabOpen}>
 					<TabsList className="ml-2 px-2 py-1.5 gap-2 mb-1">
-						<TabsTrigger value="nodes">Nodes</TabsTrigger>
-						<TabsTrigger value="editor">Editor</TabsTrigger>
+						<TabsTrigger value="nodes" onClick={() => setTabOpen("nodes")}>
+							Nodes
+						</TabsTrigger>
+						<TabsTrigger value="editor" onClick={() => setTabOpen("editor")}>
+							Editor
+						</TabsTrigger>
 					</TabsList>
 					<TabsContent value="nodes">
 						<Nodes />

@@ -8,7 +8,6 @@ export const WorkflowEditorPage = () => {
 		<ReactFlowProvider>
 			<div className="h-screen bg-card">
 				<SidebarProvider
-					defaultOpen={true}
 					className="w-full h-full"
 					style={
 						{
