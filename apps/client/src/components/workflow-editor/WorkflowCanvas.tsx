@@ -183,7 +183,7 @@ const WorkflowCanvas = () => {
 
 	const handleNodeClick = (node: WorkflowCanvasNode) => {
 		setOpen(true);
-		setSelectedNode(node.data);
+		setSelectedNode(node);
 		setTabOpen("editor");
 	};
 

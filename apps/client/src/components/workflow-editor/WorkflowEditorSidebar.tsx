@@ -23,6 +23,7 @@ import {
 	getNodeUI,
 } from "@/utils/nodes.utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { NodeEditor } from "./NodeEditor";
 
 const NodeItem = ({
 	node,
@@ -146,14 +147,16 @@ const Nodes = memo(() => {
 	);
 });
 
-const NodeEditor = () => {
-	const { selectedNode } = useWorkflowStore();
+const NodeEditorTab = () => {
+	const selectedNode = useWorkflowStore.getState().selectedNode;
 	if (!selectedNode) {
 		return (
 			<p className="text-sm text-muted-foreground">Select a node to edit</p>
 		);
 	}
-	return <p>{selectedNode.name}</p>;
+	console.log("re");
+
+	return <NodeEditor node={selectedNode} />;
 };
 
 export const WorkflowEditorSidebar = () => {
@@ -162,7 +165,7 @@ export const WorkflowEditorSidebar = () => {
 	return (
 		<Sidebar side="right" collapsible="offcanvas" className="h-screen">
 			<SidebarRail />
-			<SidebarContent className="mt-10 pl-1">
+			<SidebarContent className="mt-10">
 				<Tabs defaultValue="editor" value={tabOpen}>
 					<TabsList className="ml-2 px-2 py-1.5 gap-2 mb-1">
 						<TabsTrigger value="nodes" onClick={() => setTabOpen("nodes")}>
@@ -176,7 +179,7 @@ export const WorkflowEditorSidebar = () => {
 						<Nodes />
 					</TabsContent>
 					<TabsContent value="editor">
-						<NodeEditor />
+						<NodeEditorTab />
 					</TabsContent>
 				</Tabs>
 			</SidebarContent>

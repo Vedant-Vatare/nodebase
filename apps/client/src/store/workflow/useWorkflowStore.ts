@@ -1,14 +1,14 @@
-import type { WorkflowNode } from "@nodebase/shared";
 import { create } from "zustand";
+import type { WorkflowCanvasNode } from "@/constants/nodes";
 
 type WorkflowStore = {
-	selectedNode: WorkflowNode | null;
-	setSelectedNode: (node: WorkflowNode) => void;
+	selectedNode: WorkflowCanvasNode | null;
+	setSelectedNode: (node: WorkflowCanvasNode) => void;
 	clearSelectedNode: () => void;
 };
 
 export const useWorkflowStore = create<WorkflowStore>((set) => ({
 	selectedNode: null,
-	setSelectedNode: (node: WorkflowNode) => set({ selectedNode: node }),
+	setSelectedNode: (node: WorkflowCanvasNode) => set({ selectedNode: node }),
 	clearSelectedNode: () => set({ selectedNode: null }),
 }));
