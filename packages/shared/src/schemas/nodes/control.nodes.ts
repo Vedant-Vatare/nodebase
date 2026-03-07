@@ -34,8 +34,10 @@ export const conditionalNodeSchema = baseNodeSchema.extend({
 			z.object({
 				name: z.literal("operator"),
 				type: z.literal("dropdown"),
-				options: comparisonOperatorsEnum,
-				value: z.union([z.string(), z.number(), z.boolean()]),
+				options: z
+					.array(z.object({ label: z.string(), value: z.string() }))
+					.optional(),
+				value: comparisonOperatorsEnum,
 				required: z.literal(true).optional(),
 			}),
 		]),

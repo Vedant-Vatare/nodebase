@@ -75,8 +75,8 @@ export const NODE_UI_REGISTRY: Record<string, NodeUI> = {
 		background: "#8338EC",
 		color: "#ffffff",
 	},
-	"action.delay": {
-		name: "Delay",
+	"action.wait": {
+		name: "Wait",
 		icon: WaitIcon,
 		background: "#FF9F1C",
 		color: "#ffffff",

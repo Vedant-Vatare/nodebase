@@ -42,6 +42,14 @@ export const nodeParameterSchema = z.object({
 	placeholder: z.string().optional(),
 	type: nodePropertyTypeSchema,
 	value: z.unknown(),
+	options: z
+		.array(
+			z.object({
+				label: z.string(),
+				value: z.unknown(),
+			}),
+		)
+		.optional(),
 	default: z.string().optional(),
 	required: z.boolean().optional(),
 	multiValued: z.boolean().optional(),
