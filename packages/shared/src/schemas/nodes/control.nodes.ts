@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { baseNodeSchema } from "./base.nodes.js";
+import {
+	baseNodeSchema,
+	nodeOutputPortsSchema,
+	nodeParameterSchema,
+} from "./base.nodes.js";
 
 export const comparisonOperatorsEnum = z.enum([
 	"eq",
@@ -13,39 +17,35 @@ export const comparisonOperatorsEnum = z.enum([
 ]);
 
 export const conditionalNodeSchema = baseNodeSchema.extend({
-	name: z.literal("conditional node"),
 	type: z.literal("action"),
 	task: z.literal("action.condition"),
 	parameters: z.array(
 		z.discriminatedUnion("name", [
-			z.object({
+			nodeParameterSchema.extend({
 				name: z.literal("left_operand"),
 				type: z.literal("input"),
-
 				value: z.union([z.string(), z.number(), z.boolean()]),
-				required: z.literal(true).optional(),
+				required: z.boolean(),
 			}),
-			z.object({
+			nodeParameterSchema.extend({
 				name: z.literal("right_operand"),
 				type: z.literal("input"),
 				value: z.union([z.string(), z.number(), z.boolean()]),
-				required: z.literal(true).optional(),
+				required: z.boolean(),
 			}),
-			z.object({
+			nodeParameterSchema.extend({
 				name: z.literal("operator"),
 				type: z.literal("dropdown"),
 				options: z
 					.array(z.object({ label: z.string(), value: z.string() }))
 					.optional(),
 				value: comparisonOperatorsEnum,
-				required: z.literal(true).optional(),
+				required: z.boolean(),
 			}),
 		]),
 	),
-	outputs: z
-		.union([
-			z.object({ name: z.literal("true"), value: z.unknown() }),
-			z.object({ name: z.literal("false") }),
-		])
-		.optional(),
+	outputPorts: z.array(nodeOutputPortsSchema).default([
+		{ name: "true", label: "True" },
+		{ name: "false", label: "False" },
+	]),
 });

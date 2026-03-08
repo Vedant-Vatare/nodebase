@@ -1,37 +1,25 @@
 import { z } from "zod";
-import { baseNodeSchema } from "./base.nodes.js";
+import { baseNodeSchema, nodeParameterSchema } from "./base.nodes.js";
 
 export const setVariableNodeSchema = baseNodeSchema.extend({
-	name: z.literal("set variable"),
 	task: z.literal("action.set_variable"),
 	type: z.literal("action"),
-	description: z
-		.literal("store a value in a variable for later use")
-		.optional(),
 	parameters: z.array(
 		z.discriminatedUnion("name", [
-			z.object({
+			nodeParameterSchema.extend({
 				label: z.literal("Variable Name"),
 				name: z.literal("variable_name"),
-				input: z.literal("input"),
-				value: z.string().optional(),
-				required: z.literal(true).optional(),
+				type: z.literal("input"),
+				value: z.string(),
+				required: z.boolean(),
 			}),
-			z.object({
+			nodeParameterSchema.extend({
 				label: z.literal("Value"),
 				name: z.literal("value"),
-				input: z.literal("input"),
-				value: z.union([z.string(), z.number(), z.boolean()]).optional(),
-				required: z.literal(true).optional(),
+				type: z.literal("input"),
+				value: z.union([z.string(), z.number(), z.boolean()]),
+				required: z.boolean(),
 			}),
 		]),
 	),
-	outputs: z
-		.tuple([
-			z.object({
-				name: z.literal("variable"),
-				value: z.unknown(),
-			}),
-		])
-		.optional(),
 });

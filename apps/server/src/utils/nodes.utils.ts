@@ -39,13 +39,13 @@ export const validateNodeSchema = (
 	if (!schema) {
 		throw new Error(`No schema found for task: ${nodeData.task}`);
 	}
-	const extendedSchema = schema.merge(workflowNodeSchema);
-
+	const fullNodeSchema = workflowNodeSchema.extend(schema.shape);
 	const validationSchema = options.partial
-		? extendedSchema.partial()
-		: extendedSchema;
+		? fullNodeSchema.partial()
+		: fullNodeSchema;
 
 	const zodResult = validationSchema.safeParse(node);
+
 	if (!zodResult.success) {
 		return { success: false, error: flattenError(zodResult.error) };
 	}

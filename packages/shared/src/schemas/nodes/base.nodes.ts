@@ -75,7 +75,7 @@ export const baseNodeSchema = z.object({
 	id: z.uuid().default(() => crypto.randomUUID()),
 	name: z.string(),
 	task: z.string(),
-	description: z.string(),
+	description: z.string().optional(),
 	type: nodeTypesSchema,
 	parameters: z.array(nodeParameterSchema),
 	outputPorts: z.array(nodeOutputPortsSchema).default([

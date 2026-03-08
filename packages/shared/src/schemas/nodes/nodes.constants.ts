@@ -9,7 +9,7 @@ import { setVariableNodeSchema } from "./transform.nodes.js";
 import {
 	clickNodeSchema,
 	cronJobNodeSchema,
-	InputNodeSchema,
+	inputNodeSchema,
 } from "./trigger.nodes.js";
 
 export const nodeSchemaRegistry = new Map<string, z.ZodObject>([
@@ -17,8 +17,8 @@ export const nodeSchemaRegistry = new Map<string, z.ZodObject>([
 	["action.merge", mergeDataSchema],
 	["action.wait", waitingNodeSchema],
 	["action.set_variable", setVariableNodeSchema],
-	["trigger.input", InputNodeSchema],
+	["trigger.input", inputNodeSchema],
 	["trigger.cron", cronJobNodeSchema],
-	["event.click", clickNodeSchema],
-	["control.condition", conditionalNodeSchema],
+	["trigger.click", clickNodeSchema],
+	["action.condition", conditionalNodeSchema],
 ]);
