@@ -154,7 +154,6 @@ const NodeEditorTab = () => {
 			<p className="text-sm text-muted-foreground">Select a node to edit</p>
 		);
 	}
-	console.log("re");
 
 	return <NodeEditor node={selectedNode} />;
 };

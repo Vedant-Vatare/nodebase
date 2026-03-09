@@ -40,7 +40,7 @@ export const updateNode: RequestHandler = async (
 	res: Response,
 ) => {
 	const nodeId = req.params.id as string;
-	const data = req.body as partialsBaseNode;
+	const { id, ...data } = req.body as partialsBaseNode;
 
 	const updatedNode = await db
 		.update(nodesTable)

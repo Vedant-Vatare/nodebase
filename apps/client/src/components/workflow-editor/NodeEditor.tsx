@@ -25,15 +25,9 @@ import { Textarea } from "@/components/ui/textarea";
 import type { WorkflowCanvasNode } from "@/constants/nodes";
 import { useDebounce } from "@/hooks/debouce";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-/** How long to wait after the last change before firing the API call (ms) */
-const _DEBOUNCE_MS = 800;
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type NodeEditorProps = {
 	node: WorkflowCanvasNode;
+	onSave?: (params: NodeParameters[]) => void;
 };
 
 type NodeFieldProps = {
@@ -42,6 +36,8 @@ type NodeFieldProps = {
 	control: Control<Record<string, unknown>>;
 	allValues: Record<string, unknown>;
 };
+
+type OptionItem = { label: string; value: unknown };
 
 function buildUpdatedParams(
 	original: NodeParameters[],
@@ -53,16 +49,32 @@ function buildUpdatedParams(
 	}));
 }
 
-/** True only when every required param has a non-empty value. */
 function allRequiredFilled(
 	params: NodeParameters[],
 	formValues: Record<string, unknown>,
 ): boolean {
 	return params
 		.filter((p) => p.required)
+		.filter((p) => {
+			if (!p.dependsOn || p.dependsOn.length === 0) return true;
+
+			return p.dependsOn.every((dep) => {
+				const depValue = formValues[dep.parameter];
+				return dep.values.includes(depValue);
+			});
+		})
 		.every((p) => {
+			if (p.dependsOn) {
+			}
 			const v = formValues[p.name];
-			if (v === null || v === undefined || v === "") return false;
+
+			if (
+				v === null ||
+				v === undefined ||
+				v === "" ||
+				(typeof v === "number" && Number.isNaN(v))
+			)
+				return false;
 			if (Array.isArray(v)) return v.length > 0;
 			return true;
 		});
@@ -182,10 +194,10 @@ function CheckboxField({
 	control,
 }: Pick<NodeFieldProps, "field" | "control">) {
 	const options = useMemo(() => {
-		if (Array.isArray((field as any).options))
-			return (field as any).options as string[];
+		if (Array.isArray(field.options))
+			return field.options.map((o: OptionItem) => String(o.value));
 		return (
-			(field.default as string | undefined)
+			field.default
 				?.split(",")
 				.map((s) => s.trim())
 				.filter(Boolean) ?? []
@@ -236,10 +248,10 @@ function RadioField({
 	control,
 }: Pick<NodeFieldProps, "field" | "control">) {
 	const options = useMemo(() => {
-		if (Array.isArray((field as any).options))
-			return (field as any).options as string[];
+		if (Array.isArray(field.options))
+			return field.options.map((o: OptionItem) => String(o.value));
 		return (
-			(field.default as string | undefined)
+			field.default
 				?.split(",")
 				.map((s) => s.trim())
 				.filter(Boolean) ?? []
@@ -275,46 +287,11 @@ function RadioField({
 	);
 }
 
-/**
- * Dropdown options resolution order:
- *   1. field.options[]          — explicit enum array added by backend
- *   2. field.default            — comma-separated option list ("eq,neq,gt,lt")
- *   3. field.value as string[]  — value is itself the options array
- *   4. [field.value]            — scalar current value as sole option (graceful fallback)
- *
- * The *selected* value is always the RHF state, initialised from param.value.
- */
 function DropdownField({
 	field,
 	control,
 }: Pick<NodeFieldProps, "field" | "control">) {
-	console.log(field);
-
-	const options = useMemo<string[]>(() => {
-		if (Array.isArray((field as any).options)) {
-			return (field as any).options as string[];
-		}
-
-		if (typeof field.default === "string" && field.default.includes(",")) {
-			return field.default
-				.split(",")
-				.map((s) => s.trim())
-				.filter(Boolean);
-		}
-
-		if (Array.isArray(field.value) && field.value.length > 0) {
-			return field.value as string[];
-		}
-
-		if (
-			field.value !== undefined &&
-			field.value !== null &&
-			field.value !== ""
-		) {
-			return [String(field.value)];
-		}
-		return [];
-	}, [field]);
+	const options = (field.options as { label: string; value: string }[]) ?? [];
 
 	return (
 		<FieldWrapper field={field}>
@@ -324,7 +301,9 @@ function DropdownField({
 				render={({ field: f }) => (
 					<Select value={(f.value as string) ?? ""} onValueChange={f.onChange}>
 						<SelectTrigger id={field.name}>
-							<SelectValue placeholder={field.placeholder ?? "Select…"} />
+							<SelectValue
+								placeholder={field.placeholder ?? "Select an option"}
+							/>
 						</SelectTrigger>
 						<SelectContent>
 							{options.length === 0 ? (
@@ -333,8 +312,8 @@ function DropdownField({
 								</div>
 							) : (
 								options.map((opt) => (
-									<SelectItem key={opt} value={opt}>
-										{opt}
+									<SelectItem key={opt.value} value={opt.value}>
+										{opt.label}
 									</SelectItem>
 								))
 							)}
@@ -530,59 +509,54 @@ function useIsVisible(
 	);
 }
 
-export const NodeField = memo(function NodeField({
-	field,
-	register,
-	control,
-	allValues,
-}: NodeFieldProps) {
-	const visible = useIsVisible(field, allValues);
-	if (!visible) return null;
+export const NodeField = memo(
+	({ field, register, control, allValues }: NodeFieldProps) => {
+		const visible = useIsVisible(field, allValues);
+		if (!visible) return null;
+		const shared = { field, register, control };
 
-	const shared = { field, register, control };
+		switch (field.type as NodePropertyType) {
+			case "input":
+				return <InputField {...shared} />;
+			case "number":
+				return <NumberField {...shared} />;
+			case "textarea":
+				return <TextareaField {...shared} />;
+			case "boolean":
+				return <BooleanField {...shared} />;
+			case "checkbox":
+				return <CheckboxField {...shared} />;
+			case "radio":
+				return <RadioField {...shared} />;
+			case "dropdown":
+				return <DropdownField {...shared} />;
+			case "date":
+				return <DateField {...shared} />;
+			case "date-time":
+				return <DateTimeField {...shared} />;
+			case "array":
+				return <ArrayField {...shared} />;
+			case "key-value":
+				return <KeyValueField {...shared} />;
+			default:
+				return <InputField {...shared} />;
+		}
+	},
+);
 
-	switch (field.type as NodePropertyType) {
-		case "input":
-			return <InputField {...shared} />;
-		case "number":
-			return <NumberField {...shared} />;
-		case "textarea":
-			return <TextareaField {...shared} />;
-		case "boolean":
-			return <BooleanField {...shared} />;
-		case "checkbox":
-			return <CheckboxField {...shared} />;
-		case "radio":
-			return <RadioField {...shared} />;
-		case "dropdown":
-			return <DropdownField {...shared} />;
-		case "date":
-			return <DateField {...shared} />;
-		case "date-time":
-			return <DateTimeField {...shared} />;
-		case "array":
-			return <ArrayField {...shared} />;
-		case "key-value":
-			return <KeyValueField {...shared} />;
-		default:
-			return <InputField {...shared} />;
-	}
-});
-
-export const NodeEditor = memo(function NodeEditor({ node }: NodeEditorProps) {
+export const NodeEditor = memo(({ node, onSave }: NodeEditorProps) => {
 	const { icon: Icon, color, background } = node.data.ui;
 
-	// Flat default values derived from parameters
 	const defaultValues = useMemo(() => {
 		const vals: Record<string, unknown> = {};
-		node.data.parameters.forEach((param) => {
+		for (const param of node.data.parameters) {
 			vals[param.name] =
 				param.value !== "" && param.value !== null && param.value !== undefined
 					? param.value
 					: (param.default ?? "");
-		});
+		}
 		return vals;
-	}, [node.data.parameters.forEach]);
+	}, [node.data.parameters]);
 
 	const { register, control, formState } = useForm<Record<string, unknown>>({
 		defaultValues,
@@ -590,13 +564,13 @@ export const NodeEditor = memo(function NodeEditor({ node }: NodeEditorProps) {
 	});
 
 	const watchedValues = useWatch({ control }) as Record<string, unknown>;
-
 	const doSave = useCallback(
 		async (values: Record<string, unknown>) => {
 			if (!allRequiredFilled(node.data.parameters, values)) return;
-			const _updatedParams = buildUpdatedParams(node.data.parameters, values);
+			const updatedParams = buildUpdatedParams(node.data.parameters, values);
+			onSave?.(updatedParams);
 		},
-		[node],
+		[node, onSave],
 	);
 
 	const debouncedSave = useDebounce(doSave);
@@ -612,8 +586,7 @@ export const NodeEditor = memo(function NodeEditor({ node }: NodeEditorProps) {
 		!allRequiredFilled(node.data.parameters, watchedValues);
 
 	return (
-		<div className="flex flex-col min-w-70 max-w-90  bg-background shadow-sm">
-			{/* Header */}
+		<div className="flex flex-col min-w-70 max-w-90 bg-background shadow-sm">
 			<div className="flex gap-3 py-2 my-2 items-center bg-muted p-1">
 				<Icon
 					className="h-6 w-6 p-1 rounded-sm shrink-0"
@@ -636,7 +609,6 @@ export const NodeEditor = memo(function NodeEditor({ node }: NodeEditorProps) {
 					) : null}
 				</div>
 			</div>
-
 			<div className="flex flex-col">
 				{node.data.parameters.length === 0 ? (
 					<p className="px-3 py-4 text-xs text-muted-foreground text-center italic">
