@@ -1,6 +1,6 @@
 /* biome-ignore-all lint/suspicious/noArrayIndexKey : ignore index */
 import type { NodeParameters } from "@nodebase/shared";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
 import { useMemo } from "react";
 import {
 	type Control,
@@ -377,69 +377,61 @@ export const KeyValueField = ({
 				control={control}
 				defaultValue={[]}
 				render={({ field: f }) => {
-					const pairs: KVPair[] = Array.isArray(f.value) ? f.value : [];
+					const pairs: KVPair[] =
+						Array.isArray(f.value) && f.value.length > 0
+							? f.value
+							: [{ key: "", value: "" }];
 
 					const update = (idx: number, part: Partial<KVPair>) => {
-						f.onChange(
-							pairs.map((p, i) => (i === idx ? { ...p, ...part } : p)),
+						const next = pairs.map((p, i) =>
+							i === idx ? { ...p, ...part } : p,
 						);
+						const isLast = idx === pairs.length - 1;
+						const updated = next[idx];
+						if (isLast && (updated?.key !== "" || updated?.value !== "")) {
+							next.push({ key: "", value: "" });
+						}
+						f.onChange(next);
 					};
+
 					const remove = (idx: number) =>
 						f.onChange(pairs.filter((_, i) => i !== idx));
-					const add = () => f.onChange([...pairs, { key: "", value: "" }]);
 
 					return (
-						<div className="flex flex-col gap-1.5">
-							{pairs.length > 0 && (
-								<div className="grid grid-cols-[1fr_12px_1fr_32px] gap-1.5">
-									<span className="text-[10px] text-muted-foreground px-1">
-										Key
-									</span>
-									<span />
-									<span className="text-[10px] text-muted-foreground px-1">
-										Value
-									</span>
-									<span />
-								</div>
-							)}
+						<div className="flex flex-col gap-1 group/kvrow">
 							{pairs.map((pair, idx) => (
 								<div key={idx} className="flex items-center gap-1.5">
-									<Input
-										value={pair.key}
-										placeholder="key"
-										onChange={(e) => update(idx, { key: e.target.value })}
-										className="flex-1 font-mono text-xs h-8"
-									/>
-									<span className="text-muted-foreground text-xs shrink-0">
-										→
-									</span>
-									<Input
-										value={pair.value}
-										placeholder="value"
-										onChange={(e) => update(idx, { value: e.target.value })}
-										className="flex-1 font-mono text-xs h-8"
-									/>
+									<div className="flex flex-1 rounded-sm border border-border overflow-hidden focus-within:border-foreground/40 transition-colors">
+										<Input
+											value={pair.key}
+											placeholder="key"
+											onChange={(e) => update(idx, { key: e.target.value })}
+											className="flex-1 font-mono text-xs h-8 rounded-none border-0 shadow-none focus-visible:ring-0"
+										/>
+										<div className="w-px bg-border self-stretch shrink-0" />
+										<Input
+											value={pair.value}
+											placeholder="value"
+											onChange={(e) => update(idx, { value: e.target.value })}
+											className="flex-1 font-mono text-xs h-8 rounded-none border-0 shadow-none focus-visible:ring-0"
+										/>
+									</div>
 									<Button
 										type="button"
 										variant="ghost"
 										size="icon"
-										className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+										className={`p-1 h-max w-max shrink-0 text-muted-foreground hover:text-destructive transition-opacity
+  ${
+		idx < pairs.length - 1
+			? "opacity-0 group-hover/kvrow:opacity-100"
+			: "opacity-0 pointer-events-none"
+	}`}
 										onClick={() => remove(idx)}
 									>
-										<Trash2 className="h-3.5 w-3.5" />
+										<X className="h-3.5 w-3.5" />
 									</Button>
 								</div>
 							))}
-							<Button
-								type="button"
-								variant="outline"
-								size="sm"
-								className="w-full h-7 text-xs gap-1"
-								onClick={add}
-							>
-								<Plus className="h-3 w-3" />
-								Add pair
-							</Button>
 						</div>
 					);
 				}}
