@@ -24,12 +24,14 @@ import { useCallback, useEffect } from "react";
 import "@xyflow/react/dist/style.css";
 import { MagicWandIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import type { NodeIdsWithPosition } from "@nodebase/shared";
 import type { WorkflowCanvasNode, WorkflowNodeData } from "@/constants/nodes";
 import { useDebounce } from "@/hooks/debouce";
 import {
 	useAddWorkflowConn,
 	useDeleteWorkflowConn,
 	useDeleteWorkflowNode,
+	useUpdateNodesPositions,
 	useUpdateWorkflowConn,
 	useUpdateWorkflowNode,
 	useWorkflowConnectionsQuery,
@@ -38,12 +40,12 @@ import {
 import { Route } from "@/routes/_mainLayout/workflow/$workflowId";
 import { useWorkflowSidbarTabsStore } from "@/store/workflow/useWorkflowEditor";
 import { useWorkflowStore } from "@/store/workflow/useWorkflowStore";
-
 import {
 	getNodeColorByTask,
 	toCanvasEdges,
 	toCanvasNodes,
 } from "@/utils/nodes.utils";
+import Loader from "../ui/Loader";
 import { useSidebar } from "../ui/sidebar";
 import { WorkflowNode } from "./WorkflowNodes";
 
@@ -62,6 +64,8 @@ const WorkflowCanvas = () => {
 	const { mutate: createNewConnection } = useAddWorkflowConn();
 	const { mutate: updateConnection } = useUpdateWorkflowConn();
 	const { mutate: deleteConnection } = useDeleteWorkflowConn();
+	const { mutate: updateNodesPositions } = useUpdateNodesPositions();
+
 	const [nodes, setNodes, onNodesChange] = useNodesState<WorkflowCanvasNode>(
 		[],
 	);
@@ -173,17 +177,35 @@ const WorkflowCanvas = () => {
 	);
 
 	const handleApplyLayout = useCallback(async () => {
-		await applyLayout();
-		setNodes((currentNodes) => {
-			for (const node of currentNodes) {
-				debouncedSaveNode(node as WorkflowCanvasNode);
-			}
-			return currentNodes;
+		const formatedCanvas = await applyLayout();
+		if (!formatedCanvas) return;
+
+		const nodesWithPosition = formatedCanvas.nodes.reduce(
+			(acc: NodeIdsWithPosition, curr) => {
+				acc.push({
+					id: curr.id,
+					positionX: Math.round(curr.position.x),
+					positionY: Math.round(curr.position.y),
+				});
+				return acc;
+			},
+			[],
+		);
+		const changedNodes = nodesWithPosition.filter((node) => {
+			const n = nodes.find((n) => n.id === node.id);
+			if (!n) return false;
+			return (
+				Math.round(n.position.x) !== node.positionX ||
+				Math.round(n.position.y) !== node.positionY
+			);
 		});
-	}, [applyLayout, setNodes, debouncedSaveNode]);
+		console.log({ changedNodes, nodesWithPosition, nodes });
+		if (changedNodes.length === 0) return;
+		updateNodesPositions(changedNodes);
+	}, [applyLayout, updateNodesPositions, nodes]);
 
 	if (nodesLoading || connectionsLoading) {
-		return <div>loading workflow</div>;
+		return <Loader fullPage={false} />;
 	}
 
 	return (

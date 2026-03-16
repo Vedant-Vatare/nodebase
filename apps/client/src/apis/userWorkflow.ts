@@ -1,4 +1,5 @@
 import type {
+	NodeIdsWithPosition,
 	PartialWorkflowNode,
 	UserWorkflow,
 	WorkflowConnection,
@@ -77,4 +78,11 @@ export const updateWorkflowNodeConnApi = async (
 	});
 
 	return response.data.updatedNodeConnection as WorkflowConnection;
+};
+
+export const updateNodesPositionApi = async (nodes: NodeIdsWithPosition) => {
+	const response = await api.patch("/workflow-nodes/positions", {
+		nodes,
+	});
+	return response.data.nodes as NodeIdsWithPosition;
 };

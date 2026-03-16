@@ -8,6 +8,7 @@ import {
 	getUserWorkflowsApi,
 	getWorkflowConnections,
 	getWorkflowNodes,
+	updateNodesPositionApi,
 	updateWorkflowNodeApi,
 	updateWorkflowNodeConnApi,
 } from "@/apis/userWorkflow";
@@ -59,4 +60,9 @@ export const useDeleteWorkflowConn = () =>
 export const useUpdateWorkflowConn = () =>
 	useMutation({
 		mutationFn: updateWorkflowNodeConnApi,
+	});
+
+export const useUpdateNodesPositions = () =>
+	useMutation({
+		mutationFn: updateNodesPositionApi,
 	});
