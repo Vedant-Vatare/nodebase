@@ -1,4 +1,5 @@
 import type { NodeCredentials, NodeParameters } from "@nodebase/shared";
+import { relations } from "drizzle-orm";
 import {
 	index,
 	integer,
@@ -75,20 +76,22 @@ export const workflowNodesTable = pgTable(
 		nodeId: uuid("node_id")
 			.references(() => nodesTable.id, { onDelete: "cascade" })
 			.notNull(),
-		positionX: integer("position_x"),
-		positionY: integer("position_y"),
+		positionX: integer("position_x").notNull(),
+		positionY: integer("position_y").notNull(),
 		name: varchar({ length: 255 }).notNull(),
-		description: varchar({ length: 255 }),
+		type: nodeTypeEnum().notNull(),
 		task: varchar({ length: 255 }).notNull(),
-		type: varchar({ length: 255 }),
+		description: text(),
 		credentials: jsonb().$type<NodeCredentials>(),
-		parameters: jsonb().$type<NodeParameters[]>(),
+		parameters: jsonb().$type<NodeParameters[]>().notNull().default([]),
 		outputPorts: jsonb("output_ports")
-			.$type<{ name: string; label: string }>()
-			.array(),
+			.$type<{ name: string; label: string }[]>()
+			.notNull()
+			.default([{ name: "default", label: "Default" }]),
 		inputPorts: jsonb("input_ports")
-			.$type<{ name: string; label: string }>()
-			.array(),
+			.$type<{ name: string; label: string }[]>()
+			.notNull()
+			.default([{ name: "default", label: "Default" }]),
 	},
 	(t) => [index("workflow_nodes_workflow_id_idx").on(t.workflowId)],
 );
@@ -106,8 +109,13 @@ export const workflowConnectionsTable = pgTable(
 		targetId: uuid("target_id")
 			.references(() => workflowNodesTable.id, { onDelete: "cascade" })
 			.notNull(),
-		sourcePort: varchar("source_port", { length: 255 }),
-		targetPort: varchar("target_port", { length: 255 }),
+		// schema.ts
+		sourcePort: varchar("source_port", { length: 255 })
+			.notNull()
+			.default("default"),
+		targetPort: varchar("target_port", { length: 255 })
+			.notNull()
+			.default("default"),
 	},
 	(t) => [
 		index("workflow_conn_workflowId_idx").on(t.workflowId),
@@ -156,4 +164,43 @@ export const nodeExecutionTable = pgTable(
 		index("node_exec_workflowId_idx").on(t.workflowId),
 		index("node_exec_workflowInstanceIds_idx").on(t.workflowId, t.instanceId),
 	],
+);
+
+export const userWorkflowsRelations = relations(
+	userWorkflowsTable,
+	({ many }) => ({
+		nodes: many(workflowNodesTable),
+		connections: many(workflowConnectionsTable),
+		executions: many(workflowExecutionTable),
+	}),
+);
+
+export const workflowNodesRelations = relations(
+	workflowNodesTable,
+	({ one }) => ({
+		workflow: one(userWorkflowsTable, {
+			fields: [workflowNodesTable.workflowId],
+			references: [userWorkflowsTable.id],
+		}),
+	}),
+);
+
+export const workflowConnectionsRelations = relations(
+	workflowConnectionsTable,
+	({ one }) => ({
+		workflow: one(userWorkflowsTable, {
+			fields: [workflowConnectionsTable.workflowId],
+			references: [userWorkflowsTable.id],
+		}),
+	}),
+);
+
+export const workflowExecutionRelations = relations(
+	workflowExecutionTable,
+	({ one }) => ({
+		workflow: one(userWorkflowsTable, {
+			fields: [workflowExecutionTable.workflowId],
+			references: [userWorkflowsTable.id],
+		}),
+	}),
 );
