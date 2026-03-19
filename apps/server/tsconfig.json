@@ -12,6 +12,7 @@
 	"exclude": ["node_modules", "dist"],
 	"references": [
 		{ "path": "../../packages/db/tsconfig.json" },
-		{ "path": "../../packages/shared/tsconfig.json" }
+		{ "path": "../../packages/shared/tsconfig.json" },
+		{ "path": "../../packages/queue/tsconfig.json" }
 	]
 }

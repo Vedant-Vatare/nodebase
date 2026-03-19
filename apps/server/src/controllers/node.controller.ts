@@ -15,7 +15,7 @@ export const createNode: RequestHandler = async (
 			name: nodeData.name,
 			task: nodeData.task,
 			type: nodeData.type,
-			description: nodeData.description,
+			description: nodeData.description || "",
 			parameters: nodeData.parameters,
 			credentials: nodeData.credentials,
 			inputPorts: nodeData.inputPorts,

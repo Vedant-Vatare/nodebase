@@ -1,8 +1,16 @@
-import { db, eq, userWorkflowsTable } from "@nodebase/db";
+import {
+	and,
+	db,
+	eq,
+	not,
+	userWorkflowsTable,
+	workflowExecutionTable,
+} from "@nodebase/db";
 import type { CreateWorkflow } from "@nodebase/shared";
 import type { Request, Response } from "express";
 import createHttpError from "http-errors";
 import { isDBQueryError } from "@/utils/api.utils.js";
+import { enqueueWorkflow } from "@/utils/workflow.utils.js";
 
 export const createWorkflow = async (req: Request, res: Response) => {
 	try {
@@ -48,4 +56,45 @@ export const getAllUserWorkflow = async (_req: Request, res: Response) => {
 	return res
 		.status(200)
 		.json({ message: "all workflows fetched", userWorkflows });
+};
+
+export const executeWorkflow = async (req: Request, res: Response) => {
+	const workflowId = req.params.id as string;
+
+	const [updated] = await db
+		.update(userWorkflowsTable)
+		.set({ status: "running" })
+		.where(
+			and(
+				eq(userWorkflowsTable.id, workflowId),
+				not(eq(userWorkflowsTable.status, "running")),
+			),
+		)
+		.returning({ id: userWorkflowsTable.id });
+
+	if (!updated) {
+		return res.status(409).json({
+			message: "Workflow is already running",
+		});
+	}
+
+	const [workflowExecution] = await db
+		.insert(workflowExecutionTable)
+		.values({
+			workflowId,
+			userId: res.locals.userId,
+			status: "running",
+		})
+		.returning();
+
+	const executionResponse = await enqueueWorkflow(
+		workflowId,
+		res.locals.userId,
+	);
+
+	return res.status(201).json({
+		message: "workflow execution started successfully",
+		workflowExecution,
+		executionResponse,
+	});
 };
