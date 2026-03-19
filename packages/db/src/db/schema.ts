@@ -132,15 +132,15 @@ export const workflowExecutionTable = pgTable(
 	"workflow_executions",
 	{
 		id: uuid().defaultRandom().primaryKey(),
-		workflowId: uuid()
+		workflowId: uuid("workflow_id")
 			.references(() => userWorkflowsTable.id, { onDelete: "cascade" })
 			.notNull(),
-		userId: uuid()
+		userId: uuid("user_id")
 			.references(() => usersTable.id, { onDelete: "cascade" })
 			.notNull(),
 		status: WorkflowStatusEnum().default("running").notNull(),
 		executedAt: timestamp("started_at").defaultNow().notNull(),
-		completedAt: timestamp("started_at").notNull(),
+		completedAt: timestamp("completed_at"),
 		result: text(),
 	},
 	(t) => [index("workflow_exec_workflowId_idx").on(t.workflowId)],

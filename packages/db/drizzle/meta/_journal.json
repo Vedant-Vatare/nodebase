@@ -64,6 +64,20 @@
       "when": 1772901131549,
       "tag": "0008_brainy_richard_fisk",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1773920893611,
+      "tag": "0009_lonely_lady_bullseye",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1773921536093,
+      "tag": "0010_stormy_inertia",
+      "breakpoints": true
     }
   ]
 }
