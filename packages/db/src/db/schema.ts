@@ -150,15 +150,15 @@ export const nodeExecutionTable = pgTable(
 	"node_executions",
 	{
 		id: uuid().defaultRandom().primaryKey(),
-		workflowId: uuid()
+		workflowId: uuid("workflow_id")
 			.references(() => userWorkflowsTable.id, { onDelete: "cascade" })
 			.notNull(),
-		instanceId: uuid("instance_id").references(() => workflowNodesTable.id, {
-			onDelete: "cascade",
-		}),
+		instanceId: uuid("instance_id")
+			.references(() => workflowNodesTable.id, { onDelete: "cascade" })
+			.notNull(),
 		executedAt: timestamp("executed_at").defaultNow().notNull(),
-		completedAt: timestamp("completed_at").notNull(),
-		output: jsonb().$type<unknown>(),
+		completedAt: timestamp("completed_at"),
+		output: jsonb("output").$type<unknown>(),
 	},
 	(t) => [
 		index("node_exec_workflowId_idx").on(t.workflowId),
