@@ -19,7 +19,6 @@ import { isDBQueryError } from "@/utils/api.utils.js";
 export const addNodeInWorkflow = async (req: Request, res: Response) => {
 	try {
 		const node = req.body.node as WorkflowNode;
-
 		const [userWorkflowNode] = await db
 			.insert(workflowNodesTable)
 			.values({
@@ -32,6 +31,7 @@ export const addNodeInWorkflow = async (req: Request, res: Response) => {
 				type: node.type,
 				parameters: node.parameters,
 				credentials: node.credentials ?? null,
+				config: node.config,
 				positionX: node.positionX ?? null,
 				positionY: node.positionY ?? null,
 				outputPorts: node.outputPorts ?? null,

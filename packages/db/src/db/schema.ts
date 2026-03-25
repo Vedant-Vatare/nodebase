@@ -1,4 +1,8 @@
-import type { NodeCredentials, NodeParameters } from "@nodebase/shared";
+import type {
+	NodeConfig,
+	NodeCredentials,
+	NodeParameters,
+} from "@nodebase/shared";
 import { relations } from "drizzle-orm";
 import {
 	index,
@@ -83,6 +87,7 @@ export const workflowNodesTable = pgTable(
 		task: varchar({ length: 255 }).notNull(),
 		description: text(),
 		credentials: jsonb().$type<NodeCredentials>(),
+		config: jsonb("config").$type<NodeConfig>().default({}),
 		parameters: jsonb().$type<NodeParameters[]>().notNull().default([]),
 		outputPorts: jsonb("output_ports")
 			.$type<{ name: string; label: string }[]>()

@@ -1,6 +1,7 @@
 import type z from "zod";
 import type {
 	baseNodeSchema,
+	NodeConfigSchema,
 	nodeCredentialSchema,
 	nodeParameterSchema,
 	nodePropertyTypeSchema,
@@ -17,6 +18,8 @@ export type OverrideNodeCredentials<U> = Override<NodeCredentials, U>;
 export type NodeTypes = z.infer<typeof nodeTypesSchema>;
 
 export type NodeCredentials = z.infer<typeof nodeCredentialSchema>;
+
+export type NodeConfig = z.infer<typeof NodeConfigSchema>;
 
 export type NodePropertyType = z.infer<typeof nodePropertyTypeSchema>;
 

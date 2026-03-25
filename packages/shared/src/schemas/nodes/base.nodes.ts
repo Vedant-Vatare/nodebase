@@ -16,6 +16,16 @@ export const nodeCredentialSchema = z.object({
 	type: nodeCredentialsEnum,
 });
 
+export const NodeConfigSchema = z
+	.object({
+		hasExpressions: z.boolean().optional(),
+		retryCount: z.number().int().min(0).max(3).optional(),
+		timeout: z.number().int().min(0).optional(),
+		continueOnFail: z.boolean().optional(),
+		disabled: z.boolean().optional(),
+	})
+	.default({});
+
 export const nodePropertyTypeSchema = z.enum([
 	"input",
 	"number",
@@ -78,6 +88,7 @@ export const baseNodeSchema = z.object({
 	description: z.string().optional(),
 	type: nodeTypesSchema,
 	parameters: z.array(nodeParameterSchema),
+	config: NodeConfigSchema,
 	outputPorts: z.array(nodeOutputPortsSchema).default([
 		{
 			name: "default",
