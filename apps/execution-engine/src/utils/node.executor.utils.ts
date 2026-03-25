@@ -1,6 +1,20 @@
 import type { NodeParameters } from "@nodebase/shared";
+import { resolveNodeParams } from "./resolve.params.js";
 
 type KeyValueEntry = Record<string, string>;
+
+export const getResolvedParams = async <T extends NodeParameters>(
+	node: { parameters: T[]; config?: { hasExpressions?: boolean } },
+	workflowId: string,
+) => {
+	const parameters = (
+		node.config?.hasExpressions
+			? await resolveNodeParams(node.parameters, workflowId)
+			: node.parameters
+	) as T[];
+
+	return getTypedParams(parameters);
+};
 
 export const getTypedParams = <T extends { name: string }>(parameters: T[]) => {
 	return Object.fromEntries(parameters.map((p) => [p.name, p])) as {

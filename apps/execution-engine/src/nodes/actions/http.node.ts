@@ -1,13 +1,14 @@
 import type { HttpNode, NodeExecutorOutput } from "@/types/nodes.js";
 import {
 	flattenKeyValueParam,
-	getTypedParams,
+	getResolvedParams,
 } from "@/utils/node.executor.utils.js";
 
 export const httpNodeExecutor = async (
 	node: HttpNode,
+	workflowId: string,
 ): Promise<NodeExecutorOutput> => {
-	const params = getTypedParams(node.parameters);
+	const params = await getResolvedParams(node, workflowId);
 
 	const url = new URL(params.url.value);
 	const method = params.method.value.toUpperCase();
