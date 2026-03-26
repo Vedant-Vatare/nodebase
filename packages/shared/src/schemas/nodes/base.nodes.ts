@@ -9,6 +9,16 @@ export const nodeCredentialsEnum = z.enum([
 	"username_password",
 ]);
 
+export const anyNodeValueSchema: z.ZodType<unknown> = z.lazy(() =>
+	z.union([
+		z.string(),
+		z.number(),
+		z.boolean(),
+		z.array(anyNodeValueSchema),
+		z.record(z.string(), anyNodeValueSchema),
+	]),
+);
+
 export const nodeCredentialSchema = z.object({
 	name: z.string(),
 	value: z.string(),
@@ -51,12 +61,12 @@ export const nodeParameterSchema = z.object({
 	description: z.string().optional(),
 	placeholder: z.string().optional(),
 	type: nodePropertyTypeSchema,
-	value: z.unknown(),
+	value: anyNodeValueSchema,
 	options: z
 		.array(
 			z.object({
 				label: z.string(),
-				value: z.unknown(),
+				value: anyNodeValueSchema,
 			}),
 		)
 		.optional(),

@@ -1,7 +1,7 @@
 /* biome-ignore-all lint/suspicious/noArrayIndexKey : ignore index */
 import type { NodeParameters } from "@nodebase/shared";
 import { Plus, Trash2, X } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
 	type Control,
 	Controller,
@@ -364,77 +364,107 @@ export const ArrayField = ({
 	);
 };
 
+type KVPair = { key: string; value: string };
+
+const recordToPairs = (record: Record<string, string>): KVPair[] => {
+	const entries = Object.entries(record);
+	return entries.length > 0
+		? [
+				...entries.map(([key, value]) => ({ key, value })),
+				{ key: "", value: "" },
+			]
+		: [{ key: "", value: "" }];
+};
+
+const pairsToRecord = (pairs: KVPair[]): Record<string, string> =>
+	Object.fromEntries(
+		pairs.filter((p) => p.key !== "").map((p) => [p.key, p.value]),
+	);
+
+const KeyValueEditor = ({
+	value,
+	onChange,
+}: {
+	value: Record<string, string>;
+	onChange: (val: Record<string, string>) => void;
+}) => {
+	const [pairs, setPairs] = useState<KVPair[]>(() =>
+		value && typeof value === "object" && !Array.isArray(value)
+			? recordToPairs(value)
+			: [{ key: "", value: "" }],
+	);
+
+	const update = (idx: number, part: Partial<KVPair>) => {
+		const next = pairs.map((p, i) => (i === idx ? { ...p, ...part } : p));
+		const isLast = idx === pairs.length - 1;
+		const updated = next[idx];
+		if (isLast && (updated?.key !== "" || updated?.value !== "")) {
+			next.push({ key: "", value: "" });
+		}
+		setPairs(next);
+		onChange(pairsToRecord(next));
+	};
+
+	const remove = (idx: number) => {
+		const next = pairs.filter((_, i) => i !== idx);
+		setPairs(next);
+		onChange(pairsToRecord(next));
+	};
+
+	return (
+		<div className="flex flex-col gap-1 group/kvrow">
+			{pairs.map((pair, idx) => (
+				<div key={idx} className="flex items-center gap-1.5">
+					<div className="flex flex-1 rounded-sm border border-border overflow-hidden focus-within:border-foreground/40 transition-colors">
+						<Input
+							value={pair.key}
+							placeholder="key"
+							onChange={(e) => update(idx, { key: e.target.value })}
+							className="flex-1 font-mono text-xs h-8 rounded-none border-0 shadow-none focus-visible:ring-0"
+						/>
+						<div className="w-px bg-border self-stretch shrink-0" />
+						<Input
+							value={pair.value}
+							placeholder="value"
+							onChange={(e) => update(idx, { value: e.target.value })}
+							className="flex-1 font-mono text-xs h-8 rounded-none border-0 shadow-none focus-visible:ring-0"
+						/>
+					</div>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon"
+						className={`p-1 h-max w-max shrink-0 text-muted-foreground hover:text-destructive transition-opacity ${
+							idx < pairs.length - 1
+								? "opacity-0 group-hover/kvrow:opacity-100"
+								: "opacity-0 pointer-events-none"
+						}`}
+						onClick={() => remove(idx)}
+					>
+						<X className="h-3.5 w-3.5" />
+					</Button>
+				</div>
+			))}
+		</div>
+	);
+};
+
 export const KeyValueField = ({
 	field,
 	control,
 }: Pick<NodeFieldProps, "field" | "control">) => {
-	type KVPair = { key: string; value: string };
-
 	return (
 		<FieldWrapper field={field}>
 			<Controller
 				name={field.name}
 				control={control}
-				defaultValue={[]}
-				render={({ field: f }) => {
-					const pairs: KVPair[] =
-						Array.isArray(f.value) && f.value.length > 0
-							? f.value
-							: [{ key: "", value: "" }];
-
-					const update = (idx: number, part: Partial<KVPair>) => {
-						const next = pairs.map((p, i) =>
-							i === idx ? { ...p, ...part } : p,
-						);
-						const isLast = idx === pairs.length - 1;
-						const updated = next[idx];
-						if (isLast && (updated?.key !== "" || updated?.value !== "")) {
-							next.push({ key: "", value: "" });
-						}
-						f.onChange(next);
-					};
-
-					const remove = (idx: number) =>
-						f.onChange(pairs.filter((_, i) => i !== idx));
-
-					return (
-						<div className="flex flex-col gap-1 group/kvrow">
-							{pairs.map((pair, idx) => (
-								<div key={idx} className="flex items-center gap-1.5">
-									<div className="flex flex-1 rounded-sm border border-border overflow-hidden focus-within:border-foreground/40 transition-colors">
-										<Input
-											value={pair.key}
-											placeholder="key"
-											onChange={(e) => update(idx, { key: e.target.value })}
-											className="flex-1 font-mono text-xs h-8 rounded-none border-0 shadow-none focus-visible:ring-0"
-										/>
-										<div className="w-px bg-border self-stretch shrink-0" />
-										<Input
-											value={pair.value}
-											placeholder="value"
-											onChange={(e) => update(idx, { value: e.target.value })}
-											className="flex-1 font-mono text-xs h-8 rounded-none border-0 shadow-none focus-visible:ring-0"
-										/>
-									</div>
-									<Button
-										type="button"
-										variant="ghost"
-										size="icon"
-										className={`p-1 h-max w-max shrink-0 text-muted-foreground hover:text-destructive transition-opacity
-  ${
-		idx < pairs.length - 1
-			? "opacity-0 group-hover/kvrow:opacity-100"
-			: "opacity-0 pointer-events-none"
-	}`}
-										onClick={() => remove(idx)}
-									>
-										<X className="h-3.5 w-3.5" />
-									</Button>
-								</div>
-							))}
-						</div>
-					);
-				}}
+				defaultValue={{}}
+				render={({ field: f }) => (
+					<KeyValueEditor
+						value={(f.value as Record<string, string>) ?? {}}
+						onChange={f.onChange}
+					/>
+				)}
 			/>
 		</FieldWrapper>
 	);

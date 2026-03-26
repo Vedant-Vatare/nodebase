@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { baseNodeSchema, nodeParameterSchema } from "./base.nodes.js";
+import {
+	anyNodeValueSchema,
+	baseNodeSchema,
+	nodeParameterSchema,
+} from "./base.nodes.js";
 
 export const baseTriggerNodeSchema = baseNodeSchema.extend({
 	inputPorts: z
@@ -58,10 +62,7 @@ export const inputNodeSchema = baseTriggerNodeSchema.extend({
 				label: z.literal("Input Data"),
 				name: z.literal("inputs"),
 				type: z.literal("key-value"),
-				value: z.union([
-					z.record(z.string(), z.unknown()),
-					z.array(z.unknown()),
-				]),
+				value: z.record(z.string(), anyNodeValueSchema),
 				required: z.boolean(),
 			}),
 		]),
