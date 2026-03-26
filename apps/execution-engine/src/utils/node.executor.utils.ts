@@ -1,5 +1,5 @@
 import type { NodeParameters } from "@nodebase/shared";
-import { resolveNodeParams } from "./resolve.params.js";
+import { FormatParamsValueExpressions } from "./resolve.params.js";
 
 type KeyValueEntry = Record<string, string>;
 
@@ -9,7 +9,7 @@ export const getResolvedParams = async <T extends NodeParameters>(
 ) => {
 	const parameters = (
 		node.config?.hasExpressions
-			? await resolveNodeParams(node.parameters, workflowId)
+			? await FormatParamsValueExpressions(node.parameters, workflowId)
 			: node.parameters
 	) as T[];
 

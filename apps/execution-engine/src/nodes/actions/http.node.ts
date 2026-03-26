@@ -1,24 +1,19 @@
 import type { HttpNode, NodeExecutorOutput } from "@/types/nodes.js";
-import {
-	flattenKeyValueParam,
-	getResolvedParams,
-} from "@/utils/node.executor.utils.js";
+import { getResolvedParams } from "@/utils/node.executor.utils.js";
 
 export const httpNodeExecutor = async (
 	node: HttpNode,
 	workflowId: string,
 ): Promise<NodeExecutorOutput> => {
 	const params = await getResolvedParams(node, workflowId);
-
 	const url = new URL(params.url.value);
 	const method = params.method.value.toUpperCase();
 
-	const queryParams = flattenKeyValueParam(params.urlParams.value);
-	for (const [key, value] of Object.entries(queryParams)) {
+	for (const [key, value] of Object.entries(params.urlParams.value)) {
 		url.searchParams.set(key, value);
 	}
 
-	const headers = flattenKeyValueParam(params.headers.value);
+	const headers = params.headers.value;
 
 	const bodyMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 	const body =

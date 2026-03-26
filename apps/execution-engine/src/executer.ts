@@ -10,7 +10,6 @@ export const executeNode = ({
 	node,
 }: NodeJobPayload): Promise<NodeExecutorOutput> | NodeExecutorOutput => {
 	const { valid, missing } = checkRequiredParameters(node.parameters);
-	console.log(valid, missing);
 
 	if (!valid) {
 		return {
@@ -18,7 +17,6 @@ export const executeNode = ({
 			message: `Missing required parameters: ${missing.join(", ")}`,
 		};
 	}
-
 	switch (node.task) {
 		case "action.http":
 			return httpNodeExecutor(node as HttpNode, workflowId);
