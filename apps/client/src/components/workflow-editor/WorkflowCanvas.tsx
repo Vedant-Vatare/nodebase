@@ -199,7 +199,6 @@ const WorkflowCanvas = () => {
 				Math.round(n.position.y) !== node.positionY
 			);
 		});
-		console.log({ changedNodes, nodesWithPosition, nodes });
 		if (changedNodes.length === 0) return;
 		updateNodesPositions(changedNodes);
 	}, [applyLayout, updateNodesPositions, nodes]);

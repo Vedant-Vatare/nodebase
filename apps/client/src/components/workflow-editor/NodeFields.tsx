@@ -25,8 +25,8 @@ export type NodeFieldProps = {
 	field: NodeParameters;
 	register: UseFormRegister<Record<string, unknown>>;
 	control: Control<Record<string, unknown>>;
-	allValues: Record<string, unknown>;
 };
+
 export type OptionItem = { label: string; value: unknown };
 
 const FieldWrapper = ({

@@ -1,5 +1,6 @@
 import type { PartialWorkflowNode, WorkflowNode } from "@nodebase/shared";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useReactFlow } from "@xyflow/react";
 import {
 	addWorkflowNodeApi,
 	addWorkflowNodeConnApi,
@@ -12,6 +13,8 @@ import {
 	updateWorkflowNodeApi,
 	updateWorkflowNodeConnApi,
 } from "@/apis/userWorkflow";
+import type { WorkflowCanvasNode } from "@/constants/nodes";
+import { useWorkflowStore } from "@/store/workflow/useWorkflowStore";
 
 export const useUserWorkflowQuery = () =>
 	useQuery({
@@ -42,10 +45,35 @@ export const useDeleteWorkflowNode = () =>
 			deleteWorkflowNodeApi(id, workflowId),
 	});
 
-export const useUpdateWorkflowNode = () =>
-	useMutation({
+export const useUpdateWorkflowNode = () => {
+	const { setNodes } = useReactFlow();
+	const setSelectedNode = useWorkflowStore((s) => s.setSelectedNode);
+
+	return useMutation({
 		mutationFn: (node: PartialWorkflowNode) => updateWorkflowNodeApi(node),
+		onSuccess: (_, variables) => {
+			if (!variables.parameters || !variables.id) return;
+
+			const nodeId = variables.id;
+
+			setNodes((nds) =>
+				nds.map((n) =>
+					n.id === nodeId
+						? { ...n, data: { ...n.data, parameters: variables.parameters } }
+						: n,
+				),
+			);
+
+			const selectedNode = useWorkflowStore.getState().selectedNode;
+			if (selectedNode?.id === nodeId) {
+				setSelectedNode({
+					...selectedNode,
+					data: { ...selectedNode.data, parameters: variables.parameters },
+				} as WorkflowCanvasNode);
+			}
+		},
 	});
+};
 
 export const useAddWorkflowConn = () =>
 	useMutation({

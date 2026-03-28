@@ -148,14 +148,15 @@ const Nodes = memo(() => {
 });
 
 const NodeEditorTab = () => {
-	const selectedNode = useWorkflowStore.getState().selectedNode;
+	const selectedNode = useWorkflowStore((s) => s.selectedNode);
+
 	if (!selectedNode) {
 		return (
 			<p className="text-sm text-muted-foreground">Select a node to edit</p>
 		);
 	}
 
-	return <NodeEditor node={selectedNode} />;
+	return <NodeEditor key={selectedNode.id} node={selectedNode} />;
 };
 
 export const WorkflowEditorSidebar = () => {

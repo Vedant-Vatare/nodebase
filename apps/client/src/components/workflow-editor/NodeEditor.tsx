@@ -1,7 +1,7 @@
 /* biome-ignore-all lint/suspicious/noArrayIndexKey : ignore index */
 import type { NodeParameters, NodePropertyType } from "@nodebase/shared";
 import { Loader2 } from "lucide-react";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import type { WorkflowCanvasNode } from "@/constants/nodes";
 import { useDebounce } from "@/hooks/debouce";
@@ -23,7 +23,6 @@ import {
 
 type NodeEditorProps = {
 	node: WorkflowCanvasNode;
-	onSave: (nodeId: string, task: string, params: NodeParameters[]) => void;
 };
 
 function allRequiredFilled(
@@ -34,17 +33,13 @@ function allRequiredFilled(
 		.filter((p) => p.required)
 		.filter((p) => {
 			if (!p.dependsOn || p.dependsOn.length === 0) return true;
-
 			return p.dependsOn.every((dep) => {
 				const depValue = formValues[dep.parameter];
 				return dep.values.includes(depValue);
 			});
 		})
 		.every((p) => {
-			if (p.dependsOn) {
-			}
 			const v = formValues[p.name];
-
 			if (
 				v === null ||
 				v === undefined ||
@@ -59,18 +54,32 @@ function allRequiredFilled(
 
 function useIsVisible(
 	field: NodeParameters,
-	allValues: Record<string, unknown>,
+	control: NodeFieldProps["control"],
 ): boolean {
+	const depNames = useMemo(
+		() => field.dependsOn?.map((d) => d.parameter) ?? [],
+
+		[field.dependsOn?.map],
+	);
+
+	const depValues = useWatch({
+		control,
+		name: depNames as [string, ...string[]],
+		disabled: depNames.length === 0,
+	}) as unknown[];
+
 	if (!field.dependsOn?.length) return true;
-	return field.dependsOn.every(({ parameter, values }) =>
-		values.includes(allValues[parameter]),
+
+	return field.dependsOn.every((param, idx) =>
+		param.values.includes(depValues[idx]),
 	);
 }
 
 export const NodeField = memo(
-	({ field, register, control, allValues }: NodeFieldProps) => {
-		const visible = useIsVisible(field, allValues);
+	({ field, register, control }: Omit<NodeFieldProps, "allValues">) => {
+		const visible = useIsVisible(field, control);
 		if (!visible) return null;
+
 		const shared = { field, register, control };
 
 		switch (field.type as NodePropertyType) {
@@ -104,7 +113,7 @@ export const NodeField = memo(
 
 export const NodeEditor = memo(({ node }: NodeEditorProps) => {
 	const { icon: Icon, color, background } = node.data.ui;
-	const { mutate: udpateNode } = useUpdateWorkflowNode();
+	const { mutate: updateNode } = useUpdateWorkflowNode();
 
 	const defaultValues = useMemo(() => {
 		const vals: Record<string, unknown> = {};
@@ -126,6 +135,8 @@ export const NodeEditor = memo(({ node }: NodeEditorProps) => {
 		"idle" | "saving" | "missing"
 	>("idle");
 
+	const userHasEdited = useRef(false);
+
 	const doSave = useCallback(
 		(values: Record<string, unknown>) => {
 			if (!allRequiredFilled(node.data.parameters, values)) {
@@ -139,32 +150,26 @@ export const NodeEditor = memo(({ node }: NodeEditorProps) => {
 			}));
 
 			setEditorStatus("saving");
-			udpateNode(
-				{
-					id: node.id,
-					task: node.data.task,
-					parameters: updatedParams,
-				},
-				{
-					onSettled: () => {
-						setEditorStatus("idle");
-					},
-				},
+			updateNode(
+				{ id: node.id, task: node.data.task, parameters: updatedParams },
+				{ onSettled: () => setEditorStatus("idle") },
 			);
 		},
-		[node, udpateNode],
+		[node, updateNode],
 	);
 
 	const debouncedSave = useDebounce(doSave, () => node.id);
 
 	useEffect(() => {
 		const subscription = watch((values) => {
+			if (!userHasEdited.current) {
+				userHasEdited.current = true;
+				return;
+			}
 			debouncedSave(values as Record<string, unknown>);
 		});
 		return () => subscription.unsubscribe();
 	}, [watch, debouncedSave]);
-
-	const allValues = useWatch({ control }) as Record<string, unknown>;
 
 	return (
 		<div className="flex flex-col min-w-70 max-w-90 bg-background shadow-sm">
@@ -191,6 +196,7 @@ export const NodeEditor = memo(({ node }: NodeEditorProps) => {
 					) : null}
 				</div>
 			</div>
+
 			<div className="flex flex-col">
 				{node.data.parameters.length === 0 ? (
 					<p className="px-3 py-4 text-xs text-muted-foreground text-center italic">
@@ -203,7 +209,6 @@ export const NodeEditor = memo(({ node }: NodeEditorProps) => {
 							field={param}
 							register={register}
 							control={control}
-							allValues={allValues}
 						/>
 					))
 				)}
