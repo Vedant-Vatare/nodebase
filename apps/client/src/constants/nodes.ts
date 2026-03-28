@@ -69,7 +69,7 @@ export const NODE_UI_REGISTRY: Record<string, NodeUI> = {
 		background: "#6366F1",
 		color: "#ffffff",
 	},
-	"control.condition": {
+	"action.condition": {
 		name: "Condition",
 		icon: ConditionalIcon,
 		background: "#8338EC",

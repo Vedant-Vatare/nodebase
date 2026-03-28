@@ -1,4 +1,7 @@
 /* biome-ignore-all lint/suspicious/noArrayIndexKey : ignore index */
+
+import { CheckmarkSquare02Icon, Edit04Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { NodeParameters, NodePropertyType } from "@nodebase/shared";
 import { Loader2 } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -6,6 +9,7 @@ import { useForm, useWatch } from "react-hook-form";
 import type { WorkflowCanvasNode } from "@/constants/nodes";
 import { useDebounce } from "@/hooks/debouce";
 import { useUpdateWorkflowNode } from "@/queries/userWorkflows";
+import { Button } from "../ui/button";
 import {
 	ArrayField,
 	BooleanField,
@@ -105,6 +109,9 @@ export const NodeField = ({
 export const NodeEditor = memo(({ node }: NodeEditorProps) => {
 	const { icon: Icon, color, background } = node.data.ui;
 	const { mutate: updateNode } = useUpdateWorkflowNode();
+	const [isEditingName, setIsEditingName] = useState(false);
+	const { mutate: updateName } = useUpdateWorkflowNode();
+	const nodeNameRef = useRef<HTMLElement | null>(null);
 
 	const defaultValues = useMemo(() => {
 		const vals: Record<string, unknown> = {};
@@ -116,6 +123,31 @@ export const NodeEditor = memo(({ node }: NodeEditorProps) => {
 		}
 		return vals;
 	}, [node.data.parameters]);
+
+	const editNodeName = () => {
+		if (!nodeNameRef.current) return;
+		setIsEditingName(true);
+
+		nodeNameRef.current.contentEditable = "true";
+		nodeNameRef.current.focus();
+		const range = document.createRange();
+		const sel = window.getSelection();
+		range.selectNodeContents(nodeNameRef.current);
+		range.collapse(false);
+		sel?.removeAllRanges();
+		sel?.addRange(range);
+	};
+
+	const saveNodeName = () => {
+		if (!nodeNameRef.current) return;
+		node.data.name = nodeNameRef.current?.innerText;
+		updateName({
+			id: node.id,
+			task: node.data.task,
+			name: node.data.name,
+		});
+		setIsEditingName(false);
+	};
 
 	const { register, control, watch } = useForm<Record<string, unknown>>({
 		defaultValues,
@@ -180,20 +212,36 @@ export const NodeEditor = memo(({ node }: NodeEditorProps) => {
 						background: background ?? "#21212A",
 					}}
 				/>
-				<span className="capitalize">{node.data.name}</span>
-
-				<div className="ml-auto flex items-center gap-1.5 min-w-0">
-					{editorStatus === "saving" ? (
-						<span className="text-[10px] text-white/40 flex items-center gap-1">
-							<Loader2 className="h-3 w-3 animate-spin" />
-							saving…
-						</span>
-					) : editorStatus === "missing" ? (
-						<span className="text-[10px] text-amber-400/70 truncate">
-							required fields missing
-						</span>
-					) : null}
+				<span ref={nodeNameRef} className="capitalize outline-none">
+					{node.data.name}
+				</span>
+				<div className="ml-auto mr-1 cursor-pointer opacity-75">
+					{isEditingName ? (
+						<Button
+							onClick={saveNodeName}
+							variant={"secondary"}
+							size={"icon-sm"}
+						>
+							<HugeiconsIcon icon={CheckmarkSquare02Icon} size={14} />
+						</Button>
+					) : (
+						<Button onClick={editNodeName} variant={"ghost"} size={"icon-sm"}>
+							<HugeiconsIcon icon={Edit04Icon} size={14} />
+						</Button>
+					)}
 				</div>
+			</div>
+			<div className="flex text-xs pl-1.5 items-center gap-1.5 min-w-0 h-1 mb-3">
+				{editorStatus === "saving" ? (
+					<span className="text-white/40 flex items-center gap-1">
+						<Loader2 className="h-3 w-3 animate-spin" />
+						Saving…
+					</span>
+				) : editorStatus === "missing" ? (
+					<span className="text-amber-400/70 truncate">
+						Required fields missing
+					</span>
+				) : null}
 			</div>
 
 			<div className="flex flex-col">
