@@ -33,18 +33,19 @@ export const createNodeExecutionQuery = async (
 	workflowId: string,
 	instanceId: string,
 ) => {
-	return await db
+	const [execution] = await db
 		.insert(nodeExecutionTable)
 		.values({ workflowId, instanceId })
-		.returning();
+		.returning({ id: nodeExecutionTable.id });
+	return execution?.id;
 };
 
 export const completeNodeExecutionQuery = async (
-	instanceId: string,
+	id: string,
 	output: unknown,
 ) => {
 	return await db
 		.update(nodeExecutionTable)
 		.set({ completedAt: new Date(), output })
-		.where(eq(nodeExecutionTable.instanceId, instanceId));
+		.where(eq(nodeExecutionTable.id, id));
 };

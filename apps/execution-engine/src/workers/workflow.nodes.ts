@@ -14,7 +14,10 @@ import { storeNodeOutput } from "@/services/executionStore.js";
 export const workflowNodesWorker = new Worker(
 	NODE_QUEUE_NAME,
 	async (job: Job<NodeJobPayload>) => {
-		await createNodeExecutionQuery(job.data.workflowId, job.data.node.id);
+		const executionId = await createNodeExecutionQuery(
+			job.data.workflowId,
+			job.data.node.id,
+		);
 
 		const executionResponse = await executeNode(job.data);
 
@@ -23,18 +26,22 @@ export const workflowNodesWorker = new Worker(
 				executionResponse?.message || "failed to execute node",
 			);
 		}
-		return executionResponse.output;
+		return { id: executionId, output: executionResponse.output };
 	},
 	{ connection },
 );
 
 workflowNodesWorker.on(
 	"completed",
-	async (job: Job<NodeJobPayload>, result) => {
-		console.log("node completed with result", result);
+	async (job: Job<NodeJobPayload>, execution) => {
+		console.log("node completed with result", execution);
 
-		await completeNodeExecutionQuery(job.data.node.id, result);
-		await storeNodeOutput(job.data.workflowId, job.data.node.name, result);
+		await completeNodeExecutionQuery(execution.id, execution.output);
+		await storeNodeOutput(
+			job.data.workflowId,
+			job.data.node.name,
+			execution.output,
+		);
 	},
 );
 
