@@ -1,5 +1,7 @@
-import type { NodeExecutionConfig } from "@nodebase/queue";
+import type { NodeExecutionConfig, PrevioudExecution } from "@nodebase/queue";
 import type { NodeParameters, WorkflowNode } from "@nodebase/shared";
+import { completeNodeExecutionQuery } from "@/queries/workflow.executions.js";
+import { storeNodeOutput } from "@/services/executionStore.js";
 import { FormatParamsValueExpressions } from "./resolve.params.expressions.js";
 
 type KeyValueEntry = Record<string, string>;
@@ -113,4 +115,22 @@ export const nodeExecutionConfig = (
 	}
 
 	return {};
+};
+
+export const handlePreviousNodeExecution = async (
+	previousExecution: PrevioudExecution,
+	workflowId: string,
+) => {
+	if (!previousExecution) return;
+	if (previousExecution?.status === "waiting") {
+		await completeNodeExecutionQuery(
+			previousExecution.id,
+			previousExecution.output,
+		);
+		await storeNodeOutput(
+			workflowId,
+			previousExecution.nodeName,
+			previousExecution.output,
+		);
+	}
 };

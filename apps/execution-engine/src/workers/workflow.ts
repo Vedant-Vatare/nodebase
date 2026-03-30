@@ -3,16 +3,19 @@ import {
 	connection,
 	NODE_QUEUE_NAME,
 	type NodeExecutionConfig,
+	type PrevioudExecution,
 	WORKFLOW_QUEUE_NAME,
 	type WorkflowJobPayload,
 } from "@nodebase/queue";
 import { type Job, QueueEvents, Worker } from "bullmq";
 import {
-	completeNodeExecutionQuery,
 	updateUserWorkflowStatusQuery,
 	updateWorkflowStatusQuery,
 } from "@/queries/workflow.executions.js";
-import { nodeExecutionConfig } from "@/utils/node.executor.utils.js";
+import {
+	handlePreviousNodeExecution,
+	nodeExecutionConfig,
+} from "@/utils/node.executor.utils.js";
 
 const nodeQueueEvents = new QueueEvents(NODE_QUEUE_NAME, { connection });
 
@@ -54,33 +57,30 @@ const handleSequentialNodeExecution = async (job: Job<WorkflowJobPayload>) => {
 
 	let currentId: string | undefined = startNode.id;
 
-	// nodeconfigs are populated when node is executed and configs can be passed to next node for execution
-	let previousExecution: { id: string; status: string } | null = null;
+	/* nodeconfigs is populated when current node is executed and its configs can be passed for the next node execution which is used by worker job configs. */
+	let previousExecution: PrevioudExecution = null;
 	let nodeConfigs: NodeExecutionConfig = {};
 
 	while (currentId) {
 		const node = nodes.find((n) => n.id === currentId);
 		if (!node) throw new Error(`node ${currentId} not found`);
 
-		if (previousExecution?.status === "waiting") {
-			await completeNodeExecutionQuery(previousExecution.id, null);
-		}
+		// saving work for  previosly executed node
+		handlePreviousNodeExecution(previousExecution, workflowId);
 
-		const nodeJob = await addNodeInQueue({
-			node,
-			executionId,
-			workflowId,
-			nodeConfig: nodeConfigs,
-		});
+		const nodeJob = await addNodeInQueue(
+			{ node, executionId, workflowId },
+			nodeConfigs,
+		);
 
 		const nodeExecution = await nodeJob.waitUntilFinished(nodeQueueEvents);
-
-		console.log({ nodeExecution });
 
 		nodeConfigs = nodeExecutionConfig(node, nodeExecution?.output);
 		previousExecution = {
 			id: nodeExecution.id,
+			nodeName: node.name,
 			status: nodeExecution.status,
+			output: nodeExecution.output,
 		};
 
 		currentId = connections.find((c) => c.sourceId === currentId)?.targetId;

@@ -19,6 +19,8 @@ export const workflowNodesWorker = new Worker(
 			job.data.node.id,
 		);
 
+		console.log("picked up node:", job.data.node.name);
+
 		const executionResponse = await executeNode(job.data);
 
 		if (!executionResponse?.success) {

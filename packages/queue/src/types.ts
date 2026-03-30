@@ -14,9 +14,16 @@ export type WorkflowJobPayload = {
 
 export type NodeExecutionConfig = Partial<JobsOptions>;
 
-export interface NodeJobPayload {
+export type NodeJobPayload = {
 	executionId: string;
 	workflowId: string;
 	node: WorkflowNode;
 	nodeConfig?: NodeExecutionConfig;
-}
+};
+
+export type PrevioudExecution = {
+	id: string;
+	nodeName: string;
+	status: string;
+	output?: unknown;
+} | null;

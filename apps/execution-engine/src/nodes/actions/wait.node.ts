@@ -41,14 +41,12 @@ export const waitNodeExecutor = async (
 
 		const timestamp = new Date(params.date_time.value);
 		delay = timestamp.getTime() - Date.now();
-		console.log(timestamp, Date.now(), delay);
 
 		if (delay <= 0) {
 			return { success: false, message: "date & time must be in the future" };
 		}
 	}
 
-	console.log("waiting time for next node:", delay);
 	return {
 		success: true,
 		status: "waiting",

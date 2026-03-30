@@ -1,6 +1,10 @@
 import { Queue } from "bullmq";
 import "dotenv/config";
-import type { NodeJobPayload, WorkflowJobPayload } from "./types.js";
+import type {
+	NodeExecutionConfig,
+	NodeJobPayload,
+	WorkflowJobPayload,
+} from "./types.js";
 import { NODE_QUEUE_NAME, WORKFLOW_QUEUE_NAME } from "./types.js";
 
 export const connection = {
@@ -34,12 +38,9 @@ export async function addWorkflowInQueue(data: WorkflowJobPayload) {
 	return workflowQueue.add("execute-workflow", data);
 }
 
-export async function addNodeInQueue(data: NodeJobPayload) {
-	return nodeQueue.add("execute-node", data, {
-		attempts: 3,
-		backoff: {
-			type: "exponential",
-			delay: 1000,
-		},
-	});
+export async function addNodeInQueue(
+	data: NodeJobPayload,
+	nodeConfigs: NodeExecutionConfig = {},
+) {
+	return nodeQueue.add("execute-node", data, nodeConfigs);
 }
