@@ -68,9 +68,7 @@ const handleWorkflowTrigger = async (job: Job<WorkflowJobPayload>) => {
 	}
 
 	if (!triggerNodeId) {
-		throw new UnrecoverableError(
-			"triggerNodeId is required — specify which trigger node fired this execution",
-		);
+		throw new UnrecoverableError("triggerNodeId is required");
 	}
 
 	const triggerNode = nodes.find((n) => n.id === triggerNodeId);

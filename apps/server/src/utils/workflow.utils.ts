@@ -4,10 +4,15 @@ import {
 	userWorkflowsTable,
 	workflowExecutionTable,
 } from "@nodebase/db";
-import { addWorkflowInQueue } from "@nodebase/queue";
+import { addWorkflowInQueue, type WorkflowTriggerType } from "@nodebase/queue";
 import createHttpError from "http-errors";
 
-export const enqueueWorkflow = async (workflowId: string, userId: string) => {
+export const enqueueWorkflow = async (
+	workflowId: string,
+	userId: string,
+	triggerNodeId: string,
+	triggerType: WorkflowTriggerType,
+) => {
 	const workflowData = await db.query.userWorkflowsTable.findFirst({
 		where: eq(userWorkflowsTable.id, workflowId),
 		with: {
@@ -17,7 +22,6 @@ export const enqueueWorkflow = async (workflowId: string, userId: string) => {
 	});
 	if (!workflowData) throw createHttpError.NotFound("Workflow not found");
 	if (workflowData.userId !== userId) throw createHttpError.Unauthorized();
-
 	const [execution] = await db
 		.insert(workflowExecutionTable)
 		.values({
@@ -38,6 +42,8 @@ export const enqueueWorkflow = async (workflowId: string, userId: string) => {
 		executionId: execution.id,
 		nodes: workflowData.nodes,
 		connections: workflowData.connections,
+		triggerNodeId,
+		triggerType,
 	});
 
 	return execution;
