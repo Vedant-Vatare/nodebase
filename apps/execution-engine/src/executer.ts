@@ -1,11 +1,13 @@
 import type { NodeJobPayload, WorkflowJobPayload } from "@nodebase/queue";
 import type { InputNode, WorkflowNode } from "@nodebase/shared";
 import type { Job } from "bullmq";
+import { conditionNodeExecutor } from "./nodes/actions/condition.node.js";
 import { httpNodeExecutor } from "./nodes/actions/http.node.js";
 import { waitNodeExecutor } from "./nodes/actions/wait.node.js";
 import { inputNodeExecutor } from "./nodes/triggers/input.node.js";
 import { scheduleNodeExecutor } from "./nodes/triggers/schedule.node.js";
 import type {
+	ConditionNode,
 	CronNode,
 	HttpNode,
 	NodeExecutorOutput,
@@ -31,8 +33,8 @@ export const executeNode = ({
 			return httpNodeExecutor(node as HttpNode, workflowId);
 		case "action.wait":
 			return waitNodeExecutor(node as WaitNode, workflowId);
-		case "trigger.input":
-			return inputNodeExecutor(node as InputNode);
+		case "action.condition":
+			return conditionNodeExecutor(node as ConditionNode, workflowId);
 		default:
 			return {
 				success: false,
@@ -58,6 +60,8 @@ export const executeTriggerNode = async (
 			return scheduleNodeExecutor(triggerNode as CronNode, job);
 		case "trigger.click":
 			return { success: true };
+		case "trigger.input":
+			return inputNodeExecutor(triggerNode as InputNode);
 		default:
 			return {
 				success: false,

@@ -1,4 +1,5 @@
 import type {
+	conditionalNodeSchema,
 	cronJobNodeSchema,
 	httpNodeSchema,
 	waitingNodeSchema,
@@ -20,3 +21,4 @@ export type TriggerNodeExecutorOutput = NodeExecutorOutput & {
 export type HttpNode = z.infer<typeof httpNodeSchema>;
 export type WaitNode = z.infer<typeof waitingNodeSchema>;
 export type CronNode = z.infer<typeof cronJobNodeSchema>;
+export type ConditionNode = z.infer<typeof conditionalNodeSchema>;
