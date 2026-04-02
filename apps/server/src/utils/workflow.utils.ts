@@ -1,9 +1,4 @@
-import {
-	db,
-	eq,
-	userWorkflowsTable,
-	workflowExecutionTable,
-} from "@nodebase/db";
+import { db, eq, userWorkflowsTable } from "@nodebase/db";
 import { addWorkflowInQueue, type WorkflowTriggerType } from "@nodebase/queue";
 import createHttpError from "http-errors";
 
@@ -21,30 +16,16 @@ export const enqueueWorkflow = async (
 		},
 	});
 	if (!workflowData) throw createHttpError.NotFound("Workflow not found");
-	if (workflowData.userId !== userId) throw createHttpError.Unauthorized();
-	const [execution] = await db
-		.insert(workflowExecutionTable)
-		.values({
-			workflowId,
-			userId,
-			status: "running",
-			completedAt: new Date(),
-		})
-		.returning({ id: workflowExecutionTable.id });
 
-	if (!execution)
-		throw createHttpError.ServiceUnavailable(
-			"could not initiate exuection of workflow",
-		);
+	if (workflowData.userId !== userId) throw createHttpError.Unauthorized();
 
 	await addWorkflowInQueue({
 		workflowId: workflowId,
-		executionId: execution.id,
+		userId,
+		executionId: crypto.randomUUID(),
 		nodes: workflowData.nodes,
 		connections: workflowData.connections,
 		triggerNodeId,
 		triggerType,
 	});
-
-	return execution;
 };

@@ -1,13 +1,13 @@
 import type { WorkflowJobPayload } from "@nodebase/queue";
 import type { Job } from "bullmq";
 import { scheduleWorkflow } from "@/services/scheduler.js";
-import type { CronNode } from "@/types/nodes.js";
+import type { CronNode, TriggerNodeExecutorOutput } from "@/types/nodes.js";
 import { getResolvedParams } from "@/utils/node.executor.utils.js";
 
 export const scheduleNodeExecutor = async (
 	node: CronNode,
 	job: Job<WorkflowJobPayload>,
-) => {
+): Promise<TriggerNodeExecutorOutput> => {
 	const params = await getResolvedParams(node, job.data.workflowId);
 
 	const triggerType = params.trigger_type.value;
@@ -32,5 +32,5 @@ export const scheduleNodeExecutor = async (
 	}
 
 	await scheduleWorkflow(job.data.workflowId, job.data, repeat);
-	return;
+	return { success: true, skipCurrentExecution: true };
 };

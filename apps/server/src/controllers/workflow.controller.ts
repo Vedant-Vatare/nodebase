@@ -1,4 +1,4 @@
-import { and, db, eq, not, userWorkflowsTable } from "@nodebase/db";
+import { and, db, eq, userWorkflowsTable } from "@nodebase/db";
 import type { WorkflowTriggerType } from "@nodebase/queue";
 import type { CreateWorkflow } from "@nodebase/shared";
 import type { Request, Response } from "express";
@@ -63,28 +63,18 @@ export const executeWorkflow = async (req: Request, res: Response) => {
 		);
 	}
 
-	const [updatedUserWorflowStatus] = await db
+	const [userWorkflowExecution] = await db
 		.update(userWorkflowsTable)
 		.set({ status: "running" })
 		.where(
 			and(
 				eq(userWorkflowsTable.id, workflowId),
-				not(eq(userWorkflowsTable.status, "running")),
+				eq(userWorkflowsTable.userId, res.locals.userId),
 			),
 		)
-		.returning({ id: userWorkflowsTable.id });
-
-	if (!updatedUserWorflowStatus) {
-		throw createHttpError.Conflict("Workflow is already running");
-	}
-
-	const [userWorkflowExecution] = await db
-		.update(userWorkflowsTable)
-		.set({ status: "running" })
-		.where(eq(userWorkflowsTable.id, workflowId))
 		.returning();
 
-	const executionResponse = await enqueueWorkflow(
+	await enqueueWorkflow(
 		workflowId,
 		res.locals.userId,
 		triggerNodeId,
@@ -93,7 +83,6 @@ export const executeWorkflow = async (req: Request, res: Response) => {
 
 	return res.status(201).json({
 		message: "workflow execution started successfully",
-		executionResponse,
 		userWorkflowExecution,
 	});
 };

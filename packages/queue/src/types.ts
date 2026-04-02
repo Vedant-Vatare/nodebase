@@ -10,6 +10,7 @@ export type WorkflowTriggerType = "trigger" | "webhook" | "schedule";
 export type WorkflowJobPayload = {
 	executionId: string;
 	workflowId: string;
+	userId: string;
 	triggerNodeId: string;
 	triggerType: WorkflowTriggerType;
 	nodes: WorkflowNode[];

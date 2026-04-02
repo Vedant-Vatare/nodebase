@@ -34,7 +34,7 @@ export const workflowNodesWorker = new Worker(
 			status: executionResponse.status ?? "completed",
 		};
 	},
-	{ connection },
+	{ connection, concurrency: 10 },
 );
 
 workflowNodesWorker.on(
