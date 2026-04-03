@@ -8,7 +8,7 @@ import {
 	type WorkflowJobPayload,
 	type WorkflowNodesWorker,
 } from "@nodebase/queue";
-import type { WorkflowNode } from "@nodebase/shared";
+import type { WorkflowConnection, WorkflowNode } from "@nodebase/shared";
 import { type Job, QueueEvents, UnrecoverableError, Worker } from "bullmq";
 import { executeTriggerNode } from "@/executer.js";
 import {
@@ -148,15 +148,15 @@ const handleSequentialNodeExecution = async (
 ) => {
 	const { nodes, connections, executionId, workflowId } = job.data;
 
-	let currentNodeId: string | undefined = startNode.id;
+	const pendingBranches: WorkflowNode[] = [];
+	let currentNode: WorkflowNode | undefined = startNode;
+	let previousExecution: PrevioudExecution = null;
 
 	/* nodeconfigs is populated when current node is executed and its configs can be passed for the next node execution which is used by worker job configs. */
-	let previousExecution: PrevioudExecution = null;
 	let nodeConfigs: NodeExecutionConfig = {};
 
-	while (currentNodeId) {
-		const node = nodes.find((n) => n.id === currentNodeId);
-		if (!node) throw new UnrecoverableError(`node ${currentNodeId} not found`);
+	while (currentNode) {
+		const node = currentNode;
 
 		// saving work for  previosly executed node
 		handlePreviousNodeExecution(previousExecution, workflowId);
@@ -177,11 +177,20 @@ const handleSequentialNodeExecution = async (
 			output: nodeExecution.output,
 		};
 
-		currentNodeId = connections.find(
-			(c) =>
-				c.sourceId === currentNodeId &&
-				nodeExecution.allowedNodePorts.includes(c.sourcePort),
-		)?.targetId;
+		currentNode = getNextNode(
+			connections,
+			node,
+			nodes,
+			nodeExecution?.allowedNodePorts ?? [],
+			pendingBranches,
+		);
+
+		if (!currentNode && pendingBranches.length > 0) {
+			currentNode = pendingBranches.pop();
+
+			nodeConfigs = {};
+			previousExecution = null;
+		}
 	}
 };
 
@@ -200,4 +209,32 @@ const getStartNodeOfWorkflow = (
 	}
 
 	return startNode;
+};
+
+const getNextNode = (
+	connections: WorkflowConnection[],
+	currentNode: WorkflowNode,
+	allNodes: WorkflowNode[],
+	allowedPorts: string[],
+	pendingBranches: WorkflowNode[],
+): WorkflowNode | undefined => {
+	const outgoing = connections.filter(
+		(c) =>
+			c.sourceId === currentNode.id &&
+			(allowedPorts.length === 0 || allowedPorts.includes(c.sourcePort)),
+	);
+
+	if (outgoing.length === 0) return undefined;
+
+	const nextNodes = outgoing
+		.map((c) => allNodes.find((n) => n.id === c.targetId))
+		.filter((n): n is WorkflowNode => n !== undefined);
+
+	if (nextNodes.length === 0) return undefined;
+
+	nextNodes.sort((a, b) => a.positionY - b.positionY);
+
+	pendingBranches.push(...nextNodes.slice(1).reverse());
+
+	return nextNodes[0];
 };
