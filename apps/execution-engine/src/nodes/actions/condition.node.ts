@@ -33,66 +33,75 @@ export const conditionNodeExecutor = async (
 	const leftValue = params.left_operand.value;
 	const rightValue = params.right_operand.value;
 
+	let success = true;
+	let output = false;
+	let message: string | undefined;
+
 	if (operator === "eq") {
 		if (!isSameType(leftValue, rightValue)) {
-			return { success: true, output: false };
+			output = false;
+		} else {
+			output = leftValue === rightValue;
 		}
-		return { success: true, output: leftValue === rightValue };
-	}
-
-	if (operator === "neq") {
+	} else if (operator === "neq") {
 		if (!isSameType(leftValue, rightValue)) {
-			return { success: true, output: true };
+			output = true;
+		} else {
+			output = leftValue !== rightValue;
 		}
-		return { success: true, output: leftValue !== rightValue };
-	}
+	} else if (["gt", "lt", "gte", "lte"].includes(operator)) {
+		if (!isSameType(leftValue, rightValue)) {
+			output = false;
+			message = `Type mismatch: cannot compare ${typeof leftValue} with ${typeof rightValue}`;
+		} else {
+			const l = toSafeNumber(leftValue);
+			const r = toSafeNumber(rightValue);
 
-	if (["gt", "lt", "gte", "lte"].includes(operator)) {
-		const l = toSafeNumber(leftValue);
-		const r = toSafeNumber(rightValue);
-
-		if (l === null || r === null) {
-			return { success: true, output: false };
+			if (l === null || r === null) {
+				output = false;
+				message = `Non-numeric value: cannot use ${operator} on non-numeric operands`;
+			} else if (operator === "gt") {
+				output = l > r;
+			} else if (operator === "lt") {
+				output = l < r;
+			} else if (operator === "gte") {
+				output = l >= r;
+			} else if (operator === "lte") {
+				output = l <= r;
+			}
 		}
-
-		if (operator === "gt") return { success: true, output: l > r };
-		if (operator === "lt") return { success: true, output: l < r };
-		if (operator === "gte") return { success: true, output: l >= r };
-		if (operator === "lte") return { success: true, output: l <= r };
-	}
-
-	if (operator === "con") {
+	} else if (operator === "con") {
 		let data = leftValue;
 
 		if (typeof data === "string") {
 			try {
 				data = JSON.parse(data);
 			} catch {
-				return { success: true, output: false };
+				output = false;
 			}
 		}
 
-		const output =
+		output =
 			(Array.isArray(data) && data.includes(rightValue)) ||
 			(data !== null &&
 				typeof rightValue !== "boolean" &&
 				typeof data === "object" &&
 				Object.hasOwn(data, rightValue));
-
-		return { success: true, output };
-	}
-
-	if (operator === "emt") {
-		let output = false;
-
+	} else if (operator === "emt") {
 		if (leftValue == null) output = true;
 		else if (typeof leftValue === "string") output = leftValue.length === 0;
 		else if (Array.isArray(leftValue)) output = leftValue.length === 0;
 		else if (typeof leftValue === "object")
 			output = Object.keys(leftValue).length === 0;
-
-		return { success: true, output };
+	} else {
+		success = false;
+		message = "invalid operator";
 	}
 
-	return { success: false, message: "invalid operator", output: false };
+	return {
+		success,
+		output,
+		...(message && { message }),
+		allowedOutputPorts: [output ? "true" : "false"],
+	};
 };

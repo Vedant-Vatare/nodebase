@@ -101,13 +101,23 @@ export const checkRequiredParameters = (
 
 export const nodeExecutionConfig = (
 	node: WorkflowNode,
-	previousNodeOutput: Record<string, unknown> = {},
+	previousNodeOutput: unknown,
 ): NodeExecutionConfig => {
 	if (node.task === "action.wait") {
-		if (typeof previousNodeOutput.delay !== "number") {
+		if (
+			typeof previousNodeOutput !== "object" ||
+			previousNodeOutput === null ||
+			!("delay" in previousNodeOutput)
+		) {
 			throw new Error("wait node did not provide delay");
 		}
-		return { delay: previousNodeOutput.delay };
+
+		const { delay } = previousNodeOutput as { delay: unknown };
+		if (typeof delay !== "number") {
+			throw new Error("wait node did not provide delay");
+		}
+
+		return { delay };
 	}
 
 	if (node.task === "action.schedule") {

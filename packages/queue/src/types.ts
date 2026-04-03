@@ -17,6 +17,13 @@ export type WorkflowJobPayload = {
 	connections: WorkflowConnection[];
 };
 
+export type WorkflowNodesWorker = {
+	id: string;
+	output?: unknown;
+	allowedNodePorts: string[];
+	status: string;
+};
+
 export type NodeExecutionConfig = Partial<JobsOptions>;
 
 export type NodeJobPayload = {

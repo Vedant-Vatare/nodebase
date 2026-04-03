@@ -6,6 +6,7 @@ import {
 	type PrevioudExecution,
 	WORKFLOW_QUEUE_NAME,
 	type WorkflowJobPayload,
+	type WorkflowNodesWorker,
 } from "@nodebase/queue";
 import type { WorkflowNode } from "@nodebase/shared";
 import { type Job, QueueEvents, UnrecoverableError, Worker } from "bullmq";
@@ -147,15 +148,15 @@ const handleSequentialNodeExecution = async (
 ) => {
 	const { nodes, connections, executionId, workflowId } = job.data;
 
-	let currentId: string | undefined = startNode.id;
+	let currentNodeId: string | undefined = startNode.id;
 
 	/* nodeconfigs is populated when current node is executed and its configs can be passed for the next node execution which is used by worker job configs. */
 	let previousExecution: PrevioudExecution = null;
 	let nodeConfigs: NodeExecutionConfig = {};
 
-	while (currentId) {
-		const node = nodes.find((n) => n.id === currentId);
-		if (!node) throw new UnrecoverableError(`node ${currentId} not found`);
+	while (currentNodeId) {
+		const node = nodes.find((n) => n.id === currentNodeId);
+		if (!node) throw new UnrecoverableError(`node ${currentNodeId} not found`);
 
 		// saving work for  previosly executed node
 		handlePreviousNodeExecution(previousExecution, workflowId);
@@ -164,7 +165,10 @@ const handleSequentialNodeExecution = async (
 			nodeConfigs,
 		);
 
-		const nodeExecution = await nodeJob.waitUntilFinished(nodeQueueEvents);
+		const nodeExecution = (await nodeJob.waitUntilFinished(
+			nodeQueueEvents,
+		)) as WorkflowNodesWorker;
+
 		nodeConfigs = nodeExecutionConfig(node, nodeExecution?.output);
 		previousExecution = {
 			id: nodeExecution.id,
@@ -173,7 +177,11 @@ const handleSequentialNodeExecution = async (
 			output: nodeExecution.output,
 		};
 
-		currentId = connections.find((c) => c.sourceId === currentId)?.targetId;
+		currentNodeId = connections.find(
+			(c) =>
+				c.sourceId === currentNodeId &&
+				nodeExecution.allowedNodePorts.includes(c.sourcePort),
+		)?.targetId;
 	}
 };
 

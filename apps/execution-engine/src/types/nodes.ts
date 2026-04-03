@@ -7,10 +7,11 @@ import type {
 import type z from "zod";
 
 export type NodeExecutorOutput = {
-	success: boolean;
+	success?: boolean;
 	message?: string;
 	output?: unknown;
 	status?: "completed" | "waiting" | "stopped";
+	allowedOutputPorts?: string[];
 };
 
 export type TriggerNodeExecutorOutput = NodeExecutorOutput & {

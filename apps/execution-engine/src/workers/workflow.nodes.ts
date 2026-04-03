@@ -2,6 +2,7 @@ import {
 	connection,
 	NODE_QUEUE_NAME,
 	type NodeJobPayload,
+	type WorkflowNodesWorker,
 } from "@nodebase/queue";
 import { type Job, UnrecoverableError, Worker } from "bullmq";
 import { executeNode } from "@/executer.js";
@@ -10,10 +11,11 @@ import {
 	createNodeExecutionQuery,
 } from "@/queries/workflow.executions.js";
 import { storeNodeOutput } from "@/services/executionStore.js";
+import type { NodeExecutorOutput } from "@/types/nodes.js";
 
 export const workflowNodesWorker = new Worker(
 	NODE_QUEUE_NAME,
-	async (job: Job<NodeJobPayload>) => {
+	async (job: Job<NodeJobPayload>): Promise<WorkflowNodesWorker> => {
 		const executionId = await createNodeExecutionQuery(
 			job.data.workflowId,
 			job.data.node.id,
@@ -23,6 +25,8 @@ export const workflowNodesWorker = new Worker(
 
 		const executionResponse = await executeNode(job.data);
 
+		const allowedNodePorts = getNodeOutputPorts(executionResponse);
+
 		if (!executionResponse?.success) {
 			throw new UnrecoverableError(
 				executionResponse?.message || "failed to execute node",
@@ -31,6 +35,7 @@ export const workflowNodesWorker = new Worker(
 		return {
 			id: executionId,
 			output: executionResponse.output,
+			allowedNodePorts: allowedNodePorts,
 			status: executionResponse.status ?? "completed",
 		};
 	},
@@ -69,3 +74,10 @@ workflowNodesWorker.on(
 workflowNodesWorker.on("error", (err) => {
 	console.error(err);
 });
+
+export const getNodeOutputPorts = (
+	executionResult: NodeExecutorOutput,
+): string[] => {
+	const outputPorts = executionResult?.allowedOutputPorts;
+	return outputPorts?.length ? outputPorts : ["default"];
+};
