@@ -1,7 +1,7 @@
 import type z from "zod";
 import {
 	httpNodeSchema,
-	mergeDataSchema,
+	mergeDataNodeSchema,
 	waitingNodeSchema,
 } from "./action.nodes.js";
 import { conditionalNodeSchema } from "./control.nodes.js";
@@ -14,7 +14,7 @@ import {
 
 export const nodeSchemaRegistry = new Map<string, z.ZodObject>([
 	["action.http", httpNodeSchema],
-	["action.merge", mergeDataSchema],
+	["action.merge", mergeDataNodeSchema],
 	["action.wait", waitingNodeSchema],
 	["action.set_variable", setVariableNodeSchema],
 	["trigger.input", inputNodeSchema],

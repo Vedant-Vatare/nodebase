@@ -2,6 +2,7 @@ import type {
 	conditionalNodeSchema,
 	cronJobNodeSchema,
 	httpNodeSchema,
+	mergeDataNodeSchema,
 	waitingNodeSchema,
 } from "@nodebase/shared";
 import type z from "zod";
@@ -23,3 +24,4 @@ export type HttpNode = z.infer<typeof httpNodeSchema>;
 export type WaitNode = z.infer<typeof waitingNodeSchema>;
 export type CronNode = z.infer<typeof cronJobNodeSchema>;
 export type ConditionNode = z.infer<typeof conditionalNodeSchema>;
+export type MergeNode = z.infer<typeof mergeDataNodeSchema>;

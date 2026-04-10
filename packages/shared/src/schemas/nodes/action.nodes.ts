@@ -1,6 +1,5 @@
 import { z } from "zod";
 import {
-	anyNodeValueSchema,
 	baseNodeSchema,
 	nodeInputPortsSchema,
 	nodeOutputPortsSchema,
@@ -62,35 +61,26 @@ export const httpNodeSchema = baseNodeSchema.extend({
 	),
 });
 
-export const mergeDataSchema = baseNodeSchema.extend({
+export const mergeDataNodeSchema = baseNodeSchema.extend({
 	type: z.literal("action"),
 	task: z.literal("action.merge"),
 	parameters: z.array(
 		z.discriminatedUnion("name", [
 			nodeParameterSchema.extend({
-				name: z.literal("input1"),
-				type: z.literal("input"),
-				label: z.literal("Input 1"),
-				value: anyNodeValueSchema,
-				required: z.boolean(),
-			}),
-			nodeParameterSchema.extend({
-				name: z.literal("input2"),
-				type: z.literal("input"),
-				label: z.literal("Input 2"),
-				value: anyNodeValueSchema,
+				name: z.literal("mode"),
+				type: z.literal("dropdown"),
+				label: z.literal("merge mode"),
+				value: z.enum(["append", "combine"]),
+				default: z.enum(["append", "combine"]).optional(),
+				options: z.array(z.object({ label: z.string(), value: z.string() })),
 				required: z.boolean(),
 			}),
 		]),
 	),
 	inputPorts: z.array(nodeInputPortsSchema).default([
 		{
-			name: "input1",
-			label: "Input 1",
-		},
-		{
-			name: "input2",
-			label: "Input 2",
+			name: "default",
+			label: "Default",
 		},
 	]),
 	outputPorts: z.array(nodeOutputPortsSchema).default([
