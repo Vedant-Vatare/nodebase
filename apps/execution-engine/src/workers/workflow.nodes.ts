@@ -30,6 +30,20 @@ export const workflowNodesWorker = new Worker(
 				executionResponse?.message || "failed to execute node",
 			);
 		}
+
+		console.log(
+			`${job.data.node.name} completed with result", ${executionResponse}`,
+		);
+
+		if (executionResponse?.status !== "waiting") {
+			await completeNodeExecutionQuery(executionId, executionResponse.output);
+			await storeNodeOutput(
+				job.data.executionId,
+				job.data.node.name,
+				executionResponse.output,
+			);
+		}
+
 		return {
 			id: executionId,
 			output: executionResponse.output,
@@ -38,22 +52,6 @@ export const workflowNodesWorker = new Worker(
 		};
 	},
 	{ connection, concurrency: 10 },
-);
-
-workflowNodesWorker.on(
-	"completed",
-	async (job: Job<NodeJobPayload>, execution) => {
-		console.log("node completed with result", execution);
-
-		if (execution.status === "waiting") return;
-
-		await completeNodeExecutionQuery(execution.id, execution.output);
-		await storeNodeOutput(
-			job.data.executionId,
-			job.data.node.name,
-			execution.output,
-		);
-	},
 );
 
 workflowNodesWorker.on(

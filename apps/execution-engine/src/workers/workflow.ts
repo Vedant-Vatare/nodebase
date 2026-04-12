@@ -20,6 +20,8 @@ import {
 	updateUserWorkflowStatusQuery,
 	updateWorkflowStatusQuery,
 } from "@/queries/workflow.executions.js";
+import { getNodesOutputsByName } from "@/services/executionStore.js";
+import type { TriggerNodeExecutorOutput } from "@/types/nodes.js";
 import {
 	handlePreviousNodeExecution,
 	nodeExecutionConfig,
@@ -41,15 +43,26 @@ export const workflowWorker = new Worker(
 			job.data.userId,
 			job.data.workflowId,
 		);
-
+		const globalPendingBranches: WorkflowNode[] = [];
 		const triggerResult = await handleWorkflowTrigger(job);
 
 		if (!triggerResult?.node || triggerResult?.skipCurrentExecution) {
 			return { removeRecord: true };
 		}
-		const startNode = getStartNodeOfWorkflow(job, triggerResult.node);
 
-		await handleSequentialNodeExecution(job, startNode);
+		const startNode = getNextNode(
+			job.data.connections,
+			triggerResult.node,
+			job.data.nodes,
+			triggerResult.allowedOutputPorts ?? ["default"],
+			globalPendingBranches,
+		);
+
+		if (!startNode) {
+			throw new UnrecoverableError("does not have any action node");
+		}
+
+		await handleSequentialNodeExecution(job, startNode, globalPendingBranches);
 	},
 	{ connection, concurrency: 50 },
 );
@@ -96,7 +109,7 @@ type WorkflowTrigger = {
 
 const handleWorkflowTrigger = async (
 	job: Job<WorkflowJobPayload>,
-): Promise<WorkflowTrigger | null> => {
+): Promise<WorkflowTrigger & TriggerNodeExecutorOutput> => {
 	const { nodes, triggerNodeId, triggerType } = job.data;
 	if (!triggerType) {
 		throw new UnrecoverableError(
@@ -139,16 +152,17 @@ const handleWorkflowTrigger = async (
 	return {
 		node: triggerNode,
 		skipCurrentExecution: nodeExecution.skipCurrentExecution,
+		...nodeExecution,
 	};
 };
 
 const handleSequentialNodeExecution = async (
 	job: Job<WorkflowJobPayload>,
 	startNode: WorkflowNode,
+	globalPendingBranches: WorkflowNode[],
 ) => {
 	const { nodes, connections, executionId, workflowId } = job.data;
 
-	const pendingBranches: WorkflowNode[] = [];
 	let currentNode: WorkflowNode | undefined = startNode;
 	let previousExecution: PrevioudExecution = null;
 
@@ -159,12 +173,25 @@ const handleSequentialNodeExecution = async (
 		const node = currentNode;
 
 		// saving work for  previosly executed node
-		handlePreviousNodeExecution(previousExecution, workflowId);
+		await handlePreviousNodeExecution(previousExecution, executionId);
+
+		const preExecutionResult = await currentNodePreExecution({
+			jobData: job.data,
+			node: currentNode,
+			globalPendingBranches,
+		});
+
+		if (preExecutionResult?.skipCurrent) {
+			currentNode = preExecutionResult.nextNode;
+			continue;
+		}
+
 		const nodeJob = await addNodeInQueue(
-			{ node, executionId, workflowId },
+			{ node, executionId, workflowId, nodeData: preExecutionResult?.data },
 			nodeConfigs,
 		);
 
+		nodeJob.waitUntilFinished;
 		const nodeExecution = (await nodeJob.waitUntilFinished(
 			nodeQueueEvents,
 		)) as WorkflowNodesWorker;
@@ -182,33 +209,15 @@ const handleSequentialNodeExecution = async (
 			node,
 			nodes,
 			nodeExecution?.allowedNodePorts ?? [],
-			pendingBranches,
+			globalPendingBranches,
 		);
 
-		if (!currentNode && pendingBranches.length > 0) {
-			currentNode = pendingBranches.pop();
-
+		if (!currentNode && globalPendingBranches.length > 0) {
+			currentNode = globalPendingBranches.pop();
 			nodeConfigs = {};
 			previousExecution = null;
 		}
 	}
-};
-
-const getStartNodeOfWorkflow = (
-	job: Job<WorkflowJobPayload>,
-	triggerNode: WorkflowNode,
-) => {
-	const { nodes, connections } = job.data;
-	const triggerConnection = connections.find(
-		(c) => c.sourceId === triggerNode.id,
-	);
-	const startNode = nodes.find((n) => n.id === triggerConnection?.targetId);
-
-	if (!startNode) {
-		throw new UnrecoverableError("trigger node has no connected action nodes");
-	}
-
-	return startNode;
 };
 
 const getNextNode = (
@@ -218,6 +227,8 @@ const getNextNode = (
 	allowedPorts: string[],
 	pendingBranches: WorkflowNode[],
 ): WorkflowNode | undefined => {
+	const _pendingBranchesNames = pendingBranches.map((n) => n.name);
+
 	const outgoing = connections.filter(
 		(c) =>
 			c.sourceId === currentNode.id &&
@@ -232,9 +243,65 @@ const getNextNode = (
 
 	if (nextNodes.length === 0) return undefined;
 
-	nextNodes.sort((a, b) => a.positionY - b.positionY);
+	nextNodes.sort((a, b) => b.positionY - a.positionY);
 
-	pendingBranches.push(...nextNodes.slice(1).reverse());
+	pendingBranches.push(...nextNodes.slice(0, -1));
 
-	return nextNodes[0];
+	return nextNodes.pop();
+};
+
+type CurrentNodePreExecution = {
+	jobData: WorkflowJobPayload;
+	node: WorkflowNode | undefined;
+	globalPendingBranches: WorkflowNode[];
+	previousExecution?: PrevioudExecution;
+};
+
+type CurrentNodePreExecutionResult = {
+	skipCurrent: boolean;
+	nextNode?: WorkflowNode;
+	data?: { inputNodeNames: string[] };
+};
+
+const currentNodePreExecution = async ({
+	jobData,
+	node,
+	globalPendingBranches,
+}: CurrentNodePreExecution): Promise<
+	CurrentNodePreExecutionResult | undefined
+> => {
+	if (!node) return undefined;
+
+	if (node.task === "action.merge") {
+		const incomingConnections = jobData.connections.filter(
+			(c) => c.targetId === node.id,
+		);
+
+		const inputNodes = jobData.nodes.filter((n) =>
+			incomingConnections.some((c) => c.sourceId === n.id),
+		);
+
+		const inputNodeNames = inputNodes.map((n) => n.name);
+
+		const inputNodeOutputs = await getNodesOutputsByName(
+			jobData.executionId,
+			inputNodeNames,
+		);
+
+		const allInputsExist = inputNodeOutputs.every((output) => output !== null);
+
+		if (!allInputsExist) {
+			return {
+				skipCurrent: true,
+				nextNode: globalPendingBranches.pop(),
+			};
+		}
+
+		return {
+			skipCurrent: false,
+			data: { inputNodeNames },
+		};
+	}
+
+	return { skipCurrent: false };
 };
