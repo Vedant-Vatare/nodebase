@@ -164,7 +164,7 @@ export const WorkflowEditorSidebar = () => {
 
 	return (
 		<Sidebar side="right" collapsible="offcanvas" className="h-screen">
-			<SidebarRail />
+			<SidebarRail side="right" />
 			<SidebarContent className="mt-10">
 				<Tabs defaultValue="editor" value={tabOpen}>
 					<TabsList className="ml-2 px-2 py-1.5 gap-2 mb-1">

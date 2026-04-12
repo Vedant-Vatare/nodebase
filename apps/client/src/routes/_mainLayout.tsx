@@ -198,7 +198,13 @@ function AppSidebar() {
 
 function Layout() {
 	return (
-		<SidebarProvider>
+		<SidebarProvider
+			sidebarId="main-layout-nav"
+			defaultWidth={256}
+			minWidth={120}
+			maxWidth={275}
+			collapseThreshold={20}
+		>
 			<AppSidebar />
 			<main className="flex flex-col flex-1 h-svh overflow-hidden">
 				<header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">

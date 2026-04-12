@@ -25,17 +25,83 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
-const SIDEBAR_COOKIE_NAME = "sidebar_state";
-const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
-const SIDEBAR_WIDTH = "16rem";
+const SIDEBAR_WIDTH = 256;
 const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
+const SIDEBAR_MIN_WIDTH = 192;
+const SIDEBAR_MAX_WIDTH = 270;
+const SIDEBAR_COLLAPSE_THRESHOLD = 500;
+const DEFAULT_SIDEBAR_ID = "default";
+
+type PersistedSidebarState = {
+	open: boolean;
+	width: number;
+	lastExpandedWidth: number;
+};
+
+const getSidebarStorageKey = (sidebarId: string) => `sidebar:${sidebarId}`;
+
+const clampSidebarWidth = (
+	width: number,
+	minWidth: number,
+	maxWidth: number,
+) => {
+	if (!Number.isFinite(width)) {
+		return minWidth;
+	}
+
+	return Math.min(Math.max(width, minWidth), maxWidth);
+};
+
+function readPersistedSidebarState(
+	sidebarId: string,
+	minWidth: number,
+	maxWidth: number,
+	fallback: PersistedSidebarState,
+): PersistedSidebarState {
+	if (typeof window === "undefined") {
+		return fallback;
+	}
+
+	try {
+		const raw = window.localStorage.getItem(getSidebarStorageKey(sidebarId));
+		if (!raw) {
+			return fallback;
+		}
+
+		const parsed = JSON.parse(raw) as Partial<PersistedSidebarState>;
+		if (
+			typeof parsed.open !== "boolean" ||
+			typeof parsed.width !== "number" ||
+			typeof parsed.lastExpandedWidth !== "number"
+		) {
+			return fallback;
+		}
+
+		return {
+			open: parsed.open,
+			width: clampSidebarWidth(parsed.width, minWidth, maxWidth),
+			lastExpandedWidth: clampSidebarWidth(
+				parsed.lastExpandedWidth,
+				minWidth,
+				maxWidth,
+			),
+		};
+	} catch {
+		return fallback;
+	}
+}
 
 type SidebarContextProps = {
 	state: "expanded" | "collapsed";
 	open: boolean;
-	setOpen: (open: boolean) => void;
+	setOpen: (open: boolean | ((open: boolean) => boolean)) => void;
+	width: number;
+	setWidth: (width: number) => void;
+	minWidth: number;
+	maxWidth: number;
+	collapseThreshold: number;
 	openMobile: boolean;
 	setOpenMobile: (open: boolean) => void;
 	isMobile: boolean;
@@ -54,7 +120,12 @@ function useSidebar() {
 }
 
 function SidebarProvider({
+	sidebarId = DEFAULT_SIDEBAR_ID,
 	defaultOpen = true,
+	defaultWidth = SIDEBAR_WIDTH,
+	minWidth = SIDEBAR_MIN_WIDTH,
+	maxWidth = SIDEBAR_MAX_WIDTH,
+	collapseThreshold = SIDEBAR_COLLAPSE_THRESHOLD,
 	open: openProp,
 	onOpenChange: setOpenProp,
 	className,
@@ -62,17 +133,84 @@ function SidebarProvider({
 	children,
 	...props
 }: React.ComponentProps<"div"> & {
+	sidebarId?: string;
 	defaultOpen?: boolean;
+	defaultWidth?: number;
+	minWidth?: number;
+	maxWidth?: number;
+	collapseThreshold?: number;
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
 }) {
 	const isMobile = useIsMobile();
 	const [openMobile, setOpenMobile] = React.useState(false);
+	const normalizedMinWidth = Math.min(minWidth, maxWidth);
+	const normalizedMaxWidth = Math.max(minWidth, maxWidth);
+	const normalizedCollapseThreshold = clampSidebarWidth(
+		collapseThreshold,
+		normalizedMinWidth,
+		normalizedMaxWidth,
+	);
+	const fallbackState = React.useMemo<PersistedSidebarState>(
+		() => ({
+			open: defaultOpen,
+			width: clampSidebarWidth(
+				defaultWidth,
+				normalizedMinWidth,
+				normalizedMaxWidth,
+			),
+			lastExpandedWidth: clampSidebarWidth(
+				defaultWidth,
+				normalizedMinWidth,
+				normalizedMaxWidth,
+			),
+		}),
+		[defaultOpen, defaultWidth, normalizedMinWidth, normalizedMaxWidth],
+	);
+	const persistedState = React.useMemo(
+		() =>
+			readPersistedSidebarState(
+				sidebarId,
+				normalizedMinWidth,
+				normalizedMaxWidth,
+				fallbackState,
+			),
+		[sidebarId, normalizedMinWidth, normalizedMaxWidth, fallbackState],
+	);
 
 	// This is the internal state of the sidebar.
 	// We use openProp and setOpenProp for control from outside the component.
-	const [_open, _setOpen] = React.useState(defaultOpen);
+	const [_open, _setOpen] = React.useState(persistedState.open);
+	const [width, setWidthState] = React.useState(persistedState.width);
+	const [lastExpandedWidth, setLastExpandedWidth] = React.useState(
+		persistedState.lastExpandedWidth,
+	);
 	const open = openProp ?? _open;
+
+	React.useEffect(() => {
+		if (typeof window === "undefined") {
+			return;
+		}
+
+		window.localStorage.setItem(
+			getSidebarStorageKey(sidebarId),
+			JSON.stringify({
+				open,
+				width,
+				lastExpandedWidth,
+			}),
+		);
+	}, [sidebarId, open, width, lastExpandedWidth]);
+
+	React.useEffect(() => {
+		setWidthState((prevWidth) =>
+			clampSidebarWidth(prevWidth, normalizedMinWidth, normalizedMaxWidth),
+		);
+		setLastExpandedWidth((prevWidth) =>
+			clampSidebarWidth(prevWidth, normalizedMinWidth, normalizedMaxWidth),
+		);
+	}, [normalizedMinWidth, normalizedMaxWidth]);
+
 	const setOpen = React.useCallback(
 		(value: boolean | ((value: boolean) => boolean)) => {
 			const openState = typeof value === "function" ? value(open) : value;
@@ -82,9 +220,54 @@ function SidebarProvider({
 				_setOpen(openState);
 			}
 
-			document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
+			if (openState) {
+				setWidthState((prevWidth) => {
+					if (prevWidth > normalizedCollapseThreshold) {
+						return prevWidth;
+					}
+
+					return clampSidebarWidth(
+						lastExpandedWidth,
+						normalizedMinWidth,
+						normalizedMaxWidth,
+					);
+				});
+			}
 		},
-		[setOpenProp, open],
+		[
+			setOpenProp,
+			open,
+			normalizedCollapseThreshold,
+			lastExpandedWidth,
+			normalizedMinWidth,
+			normalizedMaxWidth,
+		],
+	);
+
+	const setWidth = React.useCallback(
+		(nextWidth: number) => {
+			const clampedWidth = clampSidebarWidth(
+				nextWidth,
+				normalizedMinWidth,
+				normalizedMaxWidth,
+			);
+
+			setWidthState(clampedWidth);
+
+			if (clampedWidth <= normalizedCollapseThreshold) {
+				setOpen(false);
+				return;
+			}
+
+			setLastExpandedWidth(clampedWidth);
+			setOpen(true);
+		},
+		[
+			normalizedMinWidth,
+			normalizedMaxWidth,
+			normalizedCollapseThreshold,
+			setOpen,
+		],
 	);
 
 	// Helper to toggle the sidebar.
@@ -117,12 +300,29 @@ function SidebarProvider({
 			state,
 			open,
 			setOpen,
+			width,
+			setWidth,
+			minWidth: normalizedMinWidth,
+			maxWidth: normalizedMaxWidth,
+			collapseThreshold: normalizedCollapseThreshold,
 			isMobile,
 			openMobile,
 			setOpenMobile,
 			toggleSidebar,
 		}),
-		[state, open, setOpen, isMobile, openMobile, toggleSidebar],
+		[
+			state,
+			open,
+			setOpen,
+			width,
+			setWidth,
+			normalizedMinWidth,
+			normalizedMaxWidth,
+			normalizedCollapseThreshold,
+			isMobile,
+			openMobile,
+			toggleSidebar,
+		],
 	);
 
 	return (
@@ -132,7 +332,7 @@ function SidebarProvider({
 					data-slot="sidebar-wrapper"
 					style={
 						{
-							"--sidebar-width": SIDEBAR_WIDTH,
+							"--sidebar-width": `${width}px`,
 							"--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
 							...style,
 						} as React.CSSProperties
@@ -283,8 +483,112 @@ function SidebarTrigger({
 	);
 }
 
-function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
-	const { toggleSidebar } = useSidebar();
+function SidebarRail({
+	className,
+	side = "left",
+	onClick,
+	onPointerDown,
+	onPointerMove,
+	onPointerUp,
+	onPointerCancel,
+	...props
+}: React.ComponentProps<"button"> & { side?: "left" | "right" }) {
+	const { isMobile, width, setWidth, toggleSidebar } = useSidebar();
+	const resizeRef = React.useRef({
+		active: false,
+		pointerId: -1,
+		startX: 0,
+		startWidth: 0,
+		didResize: false,
+		suppressClick: false,
+	});
+
+	const handlePointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
+		onPointerDown?.(event);
+		if (event.defaultPrevented || isMobile || event.button !== 0) {
+			return;
+		}
+
+		resizeRef.current = {
+			active: true,
+			pointerId: event.pointerId,
+			startX: event.clientX,
+			startWidth:
+				event.currentTarget
+					.closest("[data-slot='sidebar']")
+					?.getBoundingClientRect().width ?? width,
+			didResize: false,
+			suppressClick: false,
+		};
+		event.currentTarget.setPointerCapture(event.pointerId);
+		event.preventDefault();
+	};
+
+	const handlePointerMove = (event: React.PointerEvent<HTMLButtonElement>) => {
+		onPointerMove?.(event);
+		if (
+			!resizeRef.current.active ||
+			resizeRef.current.pointerId !== event.pointerId
+		) {
+			return;
+		}
+
+		const delta = event.clientX - resizeRef.current.startX;
+		if (Math.abs(delta) > 2) {
+			resizeRef.current.didResize = true;
+		}
+
+		const nextWidth =
+			side === "left"
+				? resizeRef.current.startWidth + delta
+				: resizeRef.current.startWidth - delta;
+		setWidth(nextWidth);
+	};
+
+	const endResize = (event: React.PointerEvent<HTMLButtonElement>) => {
+		if (
+			!resizeRef.current.active ||
+			resizeRef.current.pointerId !== event.pointerId
+		) {
+			return;
+		}
+
+		resizeRef.current.active = false;
+		if (resizeRef.current.didResize) {
+			resizeRef.current.suppressClick = true;
+		}
+
+		if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+			event.currentTarget.releasePointerCapture(event.pointerId);
+		}
+	};
+
+	const handlePointerUp = (event: React.PointerEvent<HTMLButtonElement>) => {
+		onPointerUp?.(event);
+		endResize(event);
+	};
+
+	const handlePointerCancel = (
+		event: React.PointerEvent<HTMLButtonElement>,
+	) => {
+		onPointerCancel?.(event);
+		endResize(event);
+	};
+
+	const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+		onClick?.(event);
+		if (event.defaultPrevented) {
+			return;
+		}
+
+		if (resizeRef.current.suppressClick) {
+			resizeRef.current.suppressClick = false;
+			event.preventDefault();
+			return;
+		}
+
+		toggleSidebar();
+	};
 
 	return (
 		<button
@@ -292,7 +596,11 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
 			data-slot="sidebar-rail"
 			aria-label="Toggle Sidebar"
 			tabIndex={-1}
-			onClick={toggleSidebar}
+			onClick={handleClick}
+			onPointerDown={handlePointerDown}
+			onPointerMove={handlePointerMove}
+			onPointerUp={handlePointerUp}
+			onPointerCancel={handlePointerCancel}
 			title="Toggle Sidebar"
 			className={cn(
 				"hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-0.5 sm:flex cursor-e-resize",
