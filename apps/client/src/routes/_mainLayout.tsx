@@ -45,6 +45,7 @@ import {
 	SidebarRail,
 	SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { WorkflowHeaderActions } from "@/components/workflow-editor/header/WorkflowHeaderActions";
 import { useUserWorkflowQuery } from "@/queries/userWorkflows";
 
 export const Route = createFileRoute("/_mainLayout")({
@@ -207,8 +208,9 @@ function Layout() {
 		>
 			<AppSidebar />
 			<main className="flex flex-col flex-1 h-svh overflow-hidden">
-				<header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+				<header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b px-4">
 					<SidebarTrigger className="-ml-1" />
+					<WorkflowHeaderActions />
 				</header>
 				<div className="flex-1 min-h-0">
 					<Outlet />

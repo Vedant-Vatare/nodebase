@@ -203,7 +203,7 @@ export const NodeEditor = memo(({ node }: NodeEditorProps) => {
 	const allValues = useWatch({ control }) as Record<string, unknown>;
 
 	return (
-		<div className="flex flex-col min-w-70 max-w-90 bg-background shadow-sm">
+		<div className="flex flex-col  w-full bg-background shadow-sm">
 			<div className="flex gap-3 py-2 my-2 items-center bg-muted p-1">
 				<Icon
 					className="h-6 w-6 p-1 rounded-sm shrink-0"

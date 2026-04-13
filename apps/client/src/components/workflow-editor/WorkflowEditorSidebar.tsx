@@ -163,9 +163,13 @@ export const WorkflowEditorSidebar = () => {
 	const { tabOpen, setTabOpen } = useWorkflowSidbarTabsStore();
 
 	return (
-		<Sidebar side="right" collapsible="offcanvas" className="h-screen">
+		<Sidebar
+			side="right"
+			collapsible="offcanvas"
+			className="inset-y-auto  h-full"
+		>
 			<SidebarRail side="right" />
-			<SidebarContent className="mt-10">
+			<SidebarContent className="pt-5">
 				<Tabs defaultValue="editor" value={tabOpen}>
 					<TabsList className="ml-2 px-2 py-1.5 gap-2 mb-1">
 						<TabsTrigger value="nodes" onClick={() => setTabOpen("nodes")}>
