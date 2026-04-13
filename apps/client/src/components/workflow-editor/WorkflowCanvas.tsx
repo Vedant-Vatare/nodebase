@@ -18,6 +18,7 @@ import {
 	reconnectEdge,
 	useEdgesState,
 	useNodesState,
+	useReactFlow,
 } from "@xyflow/react";
 
 import { useCallback, useEffect } from "react";
@@ -72,13 +73,47 @@ const WorkflowCanvas = () => {
 	const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 	const setTabOpen = useWorkflowSidbarTabsStore.getState().setTabOpen;
 	const setSelectedNode = useWorkflowStore((s) => s.setSelectedNode);
+	const setTriggerNodes = useWorkflowStore((s) => s.setTriggerNodes);
+	const executionTriggerFocusRequestKey = useWorkflowStore(
+		(s) => s.executionTriggerFocusRequestKey,
+	);
 	const { setOpen } = useSidebar();
 	const { applyLayout } = useLayoutContext();
+	const { fitView } = useReactFlow();
 
 	useEffect(() => {
 		if (!workflowNodes) return;
 		setNodes(toCanvasNodes(workflowNodes));
 	}, [workflowNodes, setNodes]);
+
+	useEffect(() => {
+		const triggers = nodes
+			.filter((node) => node.data.type === "trigger")
+			.map((node) => ({
+				id: node.id,
+				workflowId: node.data.workflowId,
+				task: node.data.task,
+				name: node.data.name,
+			}));
+
+		setTriggerNodes(triggers);
+	}, [nodes, setTriggerNodes]);
+
+	useEffect(() => {
+		if (!executionTriggerFocusRequestKey) return;
+		const triggerIds = nodes
+			.filter((node) => node.data.type === "trigger")
+			.map((node) => node.id);
+
+		if (triggerIds.length === 0) return;
+
+		fitView({
+			nodes: triggerIds.map((id) => ({ id })),
+			padding: 0.45,
+			duration: 350,
+			maxZoom: 1,
+		});
+	}, [executionTriggerFocusRequestKey, nodes, fitView]);
 
 	useEffect(() => {
 		if (!workflowConnections) return;

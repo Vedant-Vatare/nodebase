@@ -7,6 +7,11 @@ import type {
 } from "@nodebase/shared";
 import api from "./axios";
 
+type ExecuteWorkflowPayload = {
+	triggerNodeId: string;
+	triggerType: "trigger" | "webhook" | "schedule";
+};
+
 export const getUserWorkflowsApi = async () => {
 	const respose = await api.get<{ userWorkflows: UserWorkflow[] }>(
 		"/workflows/all",
@@ -85,4 +90,12 @@ export const updateNodesPositionApi = async (nodes: NodeIdsWithPosition) => {
 		nodes,
 	});
 	return response.data.nodes as NodeIdsWithPosition;
+};
+
+export const executeWorkflowApi = async (
+	workflowId: string,
+	payload: ExecuteWorkflowPayload,
+) => {
+	const response = await api.post(`/workflows/run/${workflowId}`, payload);
+	return response.data;
 };

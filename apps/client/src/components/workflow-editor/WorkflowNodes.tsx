@@ -1,9 +1,17 @@
-import { Plus } from "@hugeicons/core-free-icons";
+import { Plus, Zap } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
 import { memo } from "react";
 import type { WorkflowNodeData } from "@/constants/nodes";
+import { useExecuteWorkflow } from "@/queries/userWorkflows";
+import { useWorkflowStore } from "@/store/workflow/useWorkflowStore";
 import { withAlpha } from "@/utils/colors";
+
+const getTriggerType = (task: string): "trigger" | "webhook" | "schedule" => {
+	if (task.includes("webhook")) return "webhook";
+	if (task.includes("cron") || task.includes("schedule")) return "schedule";
+	return "trigger";
+};
 
 export const WorkflowNode = memo(
 	({ data, selected }: NodeProps<Node<WorkflowNodeData>>) => {
@@ -11,15 +19,47 @@ export const WorkflowNode = memo(
 		const Icon = ui.icon;
 		const bg = withAlpha(ui.background ?? "#6366f1", 0.2);
 		const border = ui.background ?? "#6366f1";
+		const isSelectingTriggerForExecution = useWorkflowStore(
+			(s) => s.isSelectingTriggerForExecution,
+		);
+		const setIsSelectingTriggerForExecution = useWorkflowStore(
+			(s) => s.setIsSelectingTriggerForExecution,
+		);
+		const { mutate: executeWorkflow, isPending } = useExecuteWorkflow();
+		const isTrigger = data.type === "trigger";
 
 		return (
 			<div
 				style={{
 					background: bg,
-					borderColor: selected ? "#ffffff" : withAlpha(border, 0.4),
+					borderColor:
+						selected || (isSelectingTriggerForExecution && isTrigger)
+							? "#FFF"
+							: withAlpha(border, 0.4),
 				}}
 				className="group relative min-w-32 h-28 max-w-max rounded-xl flex flex-col items-center justify-center gap-2 transition-all duration-200 border-2 hover:scale-105 cursor-grab"
 			>
+				{isTrigger && isSelectingTriggerForExecution ? (
+					<button
+						type="button"
+						disabled={isPending}
+						onClick={(event) => {
+							event.stopPropagation();
+							executeWorkflow({
+								workflowId: data.workflowId,
+								triggerNodeId: data.id,
+								triggerType: getTriggerType(data.task),
+							});
+							setIsSelectingTriggerForExecution(false);
+						}}
+						className="absolute flex text-center w-max -left-full top-1/2 -translate-y-1/2 size-8 rounded-full border border-border bg-[#f2f2f2] text-[#222] items-center justify-center shadow-sm  hover:text-accent-foreground transition-colors p-2 gap-1.5 hover:cursor-pointer"
+						title="Execute from this trigger"
+					>
+						<HugeiconsIcon icon={Zap} className="text-xs" size={20} />
+						<span className="text-xs">Execute</span>
+					</button>
+				) : null}
+
 				{inputPorts?.map((port, i) => (
 					<Handle
 						key={port.name}

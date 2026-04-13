@@ -1,11 +1,13 @@
 import type { PartialWorkflowNode, WorkflowNode } from "@nodebase/shared";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useReactFlow } from "@xyflow/react";
+import { toast } from "sonner";
 import {
 	addWorkflowNodeApi,
 	addWorkflowNodeConnApi,
 	deleteWorkflowConnApi,
 	deleteWorkflowNodeApi,
+	executeWorkflowApi,
 	getUserWorkflowsApi,
 	getWorkflowConnections,
 	getWorkflowNodes,
@@ -15,6 +17,7 @@ import {
 } from "@/apis/userWorkflow";
 import type { WorkflowCanvasNode } from "@/constants/nodes";
 import { useWorkflowStore } from "@/store/workflow/useWorkflowStore";
+import { getErrorMessage } from "@/utils/error";
 
 export const useUserWorkflowQuery = () =>
 	useQuery({
@@ -94,3 +97,23 @@ export const useUpdateNodesPositions = () =>
 	useMutation({
 		mutationFn: updateNodesPositionApi,
 	});
+
+export const useExecuteWorkflow = () => {
+	return useMutation({
+		mutationFn: ({
+			workflowId,
+			triggerNodeId,
+			triggerType,
+		}: {
+			workflowId: string;
+			triggerNodeId: string;
+			triggerType: "trigger" | "webhook" | "schedule";
+		}) => executeWorkflowApi(workflowId, { triggerNodeId, triggerType }),
+		onSuccess: () => {
+			toast.success("Workflow execution started");
+		},
+		onError: (error) => {
+			toast.error(getErrorMessage(error));
+		},
+	});
+};
