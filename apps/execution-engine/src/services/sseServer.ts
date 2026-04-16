@@ -19,7 +19,7 @@ const authenticateUser = async ({
 		return decoded.userId;
 	} catch (e: unknown) {
 		if (e instanceof Error) {
-			return new Response(e.message || "interal server error", {
+			return new Response(e.message || "internal server error", {
 				status: 401,
 			});
 		}
@@ -42,7 +42,7 @@ const checkWorkflowStatus = async (executionId: string, userId: string) => {
 	);
 
 	if (!userWorkflowExecution) {
-		return new Response("some error", { status: 404 });
+		return new Response("Workflow not found", { status: 404 });
 	}
 };
 
@@ -53,12 +53,39 @@ export const sseClients = new Map<
 
 Bun.serve({
 	port: process.env.SSE_SERVER_PORT,
+
 	routes: {
 		"/updates/:executionId": {
+			OPTIONS: (req) => {
+				const origin = req.headers.get("origin");
+
+				if (origin !== process.env.CLIENT_URL) {
+					return new Response("Forbidden", { status: 403 });
+				}
+
+				return new Response(null, {
+					status: 200,
+					headers: {
+						"Access-Control-Allow-Origin": process.env.CLIENT_URL,
+						"Access-Control-Allow-Methods": "GET, OPTIONS",
+						"Access-Control-Allow-Headers": "Content-Type, Authorization",
+					},
+				});
+			},
+
 			GET: async (req, server) => {
+				const origin = req.headers.get("origin");
+
+				if (origin !== process.env.CLIENT_URL) {
+					return new Response("Forbidden", { status: 403 });
+				}
+
 				const executionId = req.params.executionId;
 
-				const authResult = await authenticateUser({ req, executionId });
+				const authResult = await authenticateUser({
+					req,
+					executionId,
+				});
 				if (authResult instanceof Response) return authResult;
 
 				const workflowResponse = await checkWorkflowStatus(
@@ -71,7 +98,12 @@ Bun.serve({
 				const stream = new ReadableStream({
 					start(controller) {
 						sseClients.set(executionId, controller);
-						controller.enqueue(`data: SSE connection established\n\n`);
+
+						controller.enqueue(
+							`data: ${JSON.stringify({
+								type: "connected",
+							})}\n\n`,
+						);
 					},
 
 					cancel() {
@@ -83,8 +115,9 @@ Bun.serve({
 
 				return new Response(stream, {
 					headers: {
-						"Access-Control-Allow-Origin": "*",
-						"Content-Type": "text/event-stream;charset=utf-8",
+						"Access-Control-Allow-Origin": process.env.CLIENT_URL,
+						"Access-Control-Allow-Headers": "Content-Type, Authorization",
+						"Content-Type": "text/event-stream; charset=utf-8",
 						"Cache-Control": "no-cache, no-transform",
 						Connection: "keep-alive",
 					},
