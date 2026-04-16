@@ -1,0 +1,1 @@
+ALTER TYPE "public"."WorkflowStatusEnum" ADD VALUE 'waiting' BEFORE 'cancelled';
