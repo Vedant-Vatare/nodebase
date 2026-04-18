@@ -1,8 +1,7 @@
-import type { NodeExecutionConfig, PreviousExecution } from "@nodebase/queue";
+import type { NodeExecutionConfig, NodeJobPayload } from "@nodebase/queue";
 import type { NodeParameters, WorkflowNode } from "@nodebase/shared";
-import { completeNodeExecutionQuery } from "@/queries/workflow.executions.js";
-import { storeNodeOutput } from "@/services/executionStore.js";
 import { FormatParamsValueExpressions } from "./resolve.params.expressions.js";
+import { recordNodeCompletion } from "./workflow.updates.utils.js";
 
 type KeyValueEntry = Record<string, string>;
 
@@ -127,20 +126,19 @@ export const nodeExecutionConfig = (
 	return {};
 };
 
-export const handlePreviousNodeExecution = async (
-	previousExecution: PreviousExecution,
-	executionId: string,
-) => {
-	if (!previousExecution) return;
-	if (previousExecution?.status === "waiting") {
-		await completeNodeExecutionQuery(
-			previousExecution.id,
-			previousExecution.output,
-		);
-		await storeNodeOutput(
-			executionId,
-			previousExecution.nodeName,
-			previousExecution.output,
+export const handlePreviousNodeExecution = async (jobData: NodeJobPayload) => {
+	if (!jobData.previousNodeExecution) return;
+
+	if (jobData.previousNodeExecution?.status === "waiting") {
+		await recordNodeCompletion(
+			{
+				workflowId: jobData.workflowId,
+				executionId: jobData.executionId,
+				node: jobData.previousNodeExecution.node,
+				nodeExecutionId: jobData.previousNodeExecution.id,
+				liveUpdates: jobData.liveUpdates,
+			},
+			jobData.previousNodeExecution.output,
 		);
 	}
 };

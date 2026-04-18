@@ -146,6 +146,7 @@ const handleWorkflowTrigger = async (
 				workflowId: job.data.workflowId,
 				executionId: job.data.executionId,
 				nodeExecutionId,
+				liveUpdates: job.data.liveUpdates,
 			},
 			null,
 		);
@@ -157,7 +158,9 @@ const handleWorkflowTrigger = async (
 		workflowId: job.data.workflowId,
 		executionId: job.data.executionId,
 		nodeExecutionId,
+		liveUpdates: job.data.liveUpdates,
 	});
+
 	if (!nodeExecutionId) {
 		throw new UnrecoverableError("could not start trigger node execution");
 	}
@@ -173,6 +176,7 @@ const handleWorkflowTrigger = async (
 			workflowId: job.data.workflowId,
 			executionId: job.data.executionId,
 			nodeExecutionId,
+			liveUpdates: job.data.liveUpdates,
 		},
 		nodeExecution.output,
 	);
@@ -200,9 +204,6 @@ const handleSequentialNodeExecution = async (
 	while (currentNode) {
 		const node = currentNode;
 
-		// saving work for  previosly executed node
-		await handlePreviousNodeExecution(previousExecution, executionId);
-
 		const preExecutionResult = await currentNodePreExecution({
 			jobData: job.data,
 			node: currentNode,
@@ -221,11 +222,11 @@ const handleSequentialNodeExecution = async (
 				workflowId,
 				liveUpdates: job.data.liveUpdates,
 				nodeData: preExecutionResult?.data,
+				previousNodeExecution: previousExecution,
 			},
-			{ ...nodeConfigs, jobId: crypto.randomUUID() },
+			nodeConfigs,
 		);
 
-		nodeJob.waitUntilFinished;
 		const nodeExecution = (await nodeJob.waitUntilFinished(
 			nodeQueueEvents,
 		)) as WorkflowNodesWorker;
@@ -233,7 +234,7 @@ const handleSequentialNodeExecution = async (
 		nodeConfigs = nodeExecutionConfig(node, nodeExecution?.output);
 		previousExecution = {
 			id: nodeExecution.id,
-			nodeName: node.name,
+			node: node,
 			status: nodeExecution.status,
 			output: nodeExecution.output,
 		};
@@ -245,11 +246,22 @@ const handleSequentialNodeExecution = async (
 			nodeExecution?.allowedNodePorts ?? [],
 			globalPendingBranches,
 		);
+		console.log("the next node will be", currentNode?.name);
 
 		if (!currentNode && globalPendingBranches.length > 0) {
 			currentNode = globalPendingBranches.pop();
 			nodeConfigs = {};
 			previousExecution = null;
+		} else {
+			if (previousExecution?.status === "waiting") {
+				await handlePreviousNodeExecution({
+					workflowId,
+					executionId,
+					node: previousExecution.node,
+					liveUpdates: job.data.liveUpdates,
+					previousNodeExecution: previousExecution,
+				});
+			}
 		}
 	}
 };

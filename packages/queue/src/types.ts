@@ -27,19 +27,19 @@ export type WorkflowNodesWorker = {
 
 export type NodeExecutionConfig = Partial<JobsOptions>;
 
+export type PreviousExecution = {
+	id: string;
+	node: WorkflowNode;
+	status: string;
+	output?: unknown;
+} | null;
+
 export type NodeJobPayload = {
 	executionId: string;
 	workflowId: string;
 	node: WorkflowNode;
 	nodeExecutionId?: string;
 	liveUpdates?: boolean;
-	nodeConfig?: NodeExecutionConfig;
+	previousNodeExecution?: PreviousExecution;
 	nodeData?: { inputNodeNames: string[] };
 };
-
-export type PreviousExecution = {
-	id: string;
-	nodeName: string;
-	status: string;
-	output?: unknown;
-} | null;

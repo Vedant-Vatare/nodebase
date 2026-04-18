@@ -7,6 +7,7 @@ import {
 import { type Job, UnrecoverableError, Worker } from "bullmq";
 import { executeNode } from "@/executer.js";
 import type { NodeExecutorOutput } from "@/types/nodes.js";
+import { handlePreviousNodeExecution } from "@/utils/node.executor.utils.js";
 import {
 	recordNodeCompletion,
 	recordNodeStart,
@@ -15,6 +16,8 @@ import {
 export const workflowNodesWorker = new Worker(
 	NODE_QUEUE_NAME,
 	async (job: Job<NodeJobPayload>): Promise<WorkflowNodesWorker> => {
+		await handlePreviousNodeExecution(job.data);
+
 		const nodeExecutionId = crypto.randomUUID();
 		await job.updateData({ ...job.data, nodeExecutionId });
 
@@ -35,6 +38,7 @@ export const workflowNodesWorker = new Worker(
 		);
 
 		if (executionResponse?.status !== "waiting") {
+			console.log("recording completion as its not in waiting status");
 			await recordNodeCompletion(job.data, executionResponse.output);
 		}
 
