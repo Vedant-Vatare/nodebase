@@ -207,3 +207,58 @@ body {
 	--sidebar-border: hsl(240 3.7% 15.9%);
 	--sidebar-ring: hsl(217.2 91.2% 59.8%);
 }
+
+.workflow-node {
+	position: relative;
+}
+
+@property --trail-angle {
+	syntax: "<angle>";
+	initial-value: 0deg;
+	inherits: false;
+}
+
+@keyframes spin-trail {
+	from {
+		--trail-angle: 0deg;
+	}
+	to {
+		--trail-angle: 360deg;
+	}
+}
+
+.workflow-node.executing {
+	border-color: transparent;
+}
+
+.workflow-node.executing::after {
+	content: "";
+	position: absolute;
+	inset: -2px;
+	border-radius: inherit;
+	padding: 2px;
+	background: conic-gradient(
+		from var(--trail-angle),
+		transparent 50%,
+		white 100%
+	);
+	-webkit-mask:
+		linear-gradient(#fff 0 0) content-box,
+		linear-gradient(#fff 0 0);
+	-webkit-mask-composite: xor;
+	mask-composite: exclude;
+	pointer-events: none;
+	animation: spin-trail 2s linear infinite;
+}
+
+.workflow-node.completed {
+	border: none;
+	outline-offset: 1px;
+	outline: 3px solid #52b788;
+}
+
+.workflow-node.failed {
+	border: none;
+	outline-offset: 1px;
+	outline: 2px solid #dd2d4a;
+}

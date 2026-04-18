@@ -14,7 +14,7 @@ export const useSSE = () => {
 			},
 			async onopen(response: Response) {
 				if (response.ok) {
-					console.log("✓ Connected to SSE server", response.status);
+					console.log("Connected to SSE server", response.status);
 				}
 			},
 			async onmessage(msg) {

@@ -1,10 +1,15 @@
 import { Plus, Zap } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import type { NodeExecutionUpdate } from "@nodebase/shared";
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
-import { memo } from "react";
+import { memo, useEffect, useState } from "react";
 import type { WorkflowNodeData } from "@/constants/nodes";
+import { cn } from "@/lib/utils";
 import { useExecuteWorkflow } from "@/queries/userWorkflows";
-import { useWorkflowStore } from "@/store/workflow/useWorkflowStore";
+import {
+	useWorkflowExecutionStore,
+	useWorkflowStore,
+} from "@/store/workflow/useWorkflowStore";
 import { withAlpha } from "@/utils/colors";
 
 const getTriggerType = (task: string): "trigger" | "webhook" | "schedule" => {
@@ -13,12 +18,18 @@ const getTriggerType = (task: string): "trigger" | "webhook" | "schedule" => {
 	return "trigger";
 };
 
+type ExecutionStateType = NodeExecutionUpdate["type"] | null;
+
 export const WorkflowNode = memo(
-	({ data, selected }: NodeProps<Node<WorkflowNodeData>>) => {
+	({ data }: NodeProps<Node<WorkflowNodeData>>) => {
 		const { ui, name, inputPorts, outputPorts } = data;
 		const Icon = ui.icon;
 		const bg = withAlpha(ui.background ?? "#6366f1", 0.2);
 		const border = ui.background ?? "#6366f1";
+		const [executionState, setExecutionState] =
+			useState<ExecutionStateType>(null);
+		const { showExecutionUpdates, nodeExecutionUpdates } =
+			useWorkflowExecutionStore();
 		const isSelectingTriggerForExecution = useWorkflowStore(
 			(s) => s.isSelectingTriggerForExecution,
 		);
@@ -28,16 +39,36 @@ export const WorkflowNode = memo(
 		const { mutate: executeWorkflow, isPending } = useExecuteWorkflow();
 		const isTrigger = data.type === "trigger";
 
+		useEffect(() => {
+			if (!showExecutionUpdates) return;
+			const CurrentNodeUpdate = nodeExecutionUpdates[data.id];
+
+			if (!CurrentNodeUpdate) return;
+			setExecutionState(CurrentNodeUpdate.type);
+		}, [showExecutionUpdates, data.id, nodeExecutionUpdates]);
+
+		const getStateClass = () => {
+			switch (executionState) {
+				case "node:started":
+					return "executing";
+				case "node:completed":
+					return "completed";
+				case "node:failed":
+					return "failed";
+				default:
+					return "";
+			}
+		};
+
 		return (
 			<div
 				style={{
 					background: bg,
-					borderColor:
-						selected || (isSelectingTriggerForExecution && isTrigger)
-							? "#FFF"
-							: withAlpha(border, 0.4),
+					borderColor: border,
 				}}
-				className="group relative min-w-32 h-28 max-w-max rounded-xl flex flex-col items-center justify-center gap-2 transition-all duration-200 border-2 hover:scale-105 cursor-grab"
+				className={cn(
+					`workflow-node group relative min-w-32 h-28 max-w-max rounded-xl flex flex-col items-center justify-center gap-2 transition-all duration-200 border hover:scale-105 cursor-grab ${getStateClass()}`,
+				)}
 			>
 				{isTrigger && isSelectingTriggerForExecution ? (
 					<button
@@ -148,3 +179,5 @@ export const WorkflowNode = memo(
 		);
 	},
 );
+
+WorkflowNode.displayName = "WorkflowNode";
