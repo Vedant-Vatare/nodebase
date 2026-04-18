@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import type { WorkflowCanvasNode } from "@/constants/nodes";
-import { useDebounce } from "@/hooks/debouce";
+import { useDebounce } from "@/hooks/debounce";
 import { useUpdateWorkflowNode } from "@/queries/userWorkflows";
 import { Button } from "../ui/button";
 import {

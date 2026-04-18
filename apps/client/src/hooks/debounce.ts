@@ -5,8 +5,8 @@ export function useDebounce<T extends unknown[]>(
 	getKey?: (...args: T) => string,
 	delay = 2000,
 ) {
-	const timers = useRef<Map<string, number>>(new Map());
-	const timer = useRef<number | undefined>(undefined);
+	const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+	const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
 	return useCallback(
 		(...args: T) => {

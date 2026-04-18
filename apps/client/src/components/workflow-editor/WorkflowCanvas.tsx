@@ -27,7 +27,7 @@ import { MagicWandIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { NodeIdsWithPosition } from "@nodebase/shared";
 import type { WorkflowCanvasNode, WorkflowNodeData } from "@/constants/nodes";
-import { useDebounce } from "@/hooks/debouce";
+import { useDebounce } from "@/hooks/debounce";
 import {
 	useAddWorkflowConn,
 	useDeleteWorkflowConn,
