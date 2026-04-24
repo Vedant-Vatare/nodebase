@@ -57,29 +57,34 @@ export const useDeleteWorkflowNode = () =>
 	});
 
 export const useUpdateWorkflowNode = () => {
-	const { setNodes } = useReactFlow();
+	const { setNodes } = useReactFlow<WorkflowCanvasNode>();
 	const setSelectedNode = useWorkflowStore((s) => s.setSelectedNode);
 
 	return useMutation({
 		mutationFn: (node: PartialWorkflowNode) => updateWorkflowNodeApi(node),
 		onSuccess: (_, variables) => {
-			if (!variables.parameters || !variables.id) return;
+			if (!variables.id) return;
 
-			const nodeId = variables.id;
+			const { id: nodeId, parameters, name, config } = variables;
+
+			const patchData = (data: WorkflowCanvasNode["data"]) => ({
+				...data,
+				...(name && { name }),
+				...(parameters && { parameters }),
+				...(config && { config }),
+			});
 
 			setNodes((nds) =>
 				nds.map((n) =>
-					n.id === nodeId
-						? { ...n, data: { ...n.data, parameters: variables.parameters } }
-						: n,
+					n.id === nodeId ? { ...n, data: patchData(n.data) } : n,
 				),
 			);
 
-			const selectedNode = useWorkflowStore.getState().selectedNode;
-			if (selectedNode?.id === nodeId) {
+			const selected = useWorkflowStore.getState().selectedNode;
+			if (selected?.id === nodeId) {
 				setSelectedNode({
-					...selectedNode,
-					data: { ...selectedNode.data, parameters: variables.parameters },
+					...selected,
+					data: patchData(selected.data),
 				} as WorkflowCanvasNode);
 			}
 		},

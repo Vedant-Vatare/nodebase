@@ -110,7 +110,7 @@ export const NodeEditor = memo(({ node }: NodeEditorProps) => {
 	const { icon: Icon, color, background } = node.data.ui;
 	const { mutate: updateNode } = useUpdateWorkflowNode();
 	const [isEditingName, setIsEditingName] = useState(false);
-	const { mutate: updateName } = useUpdateWorkflowNode();
+
 	const nodeNameRef = useRef<HTMLElement | null>(null);
 
 	const defaultValues = useMemo(() => {
@@ -141,7 +141,8 @@ export const NodeEditor = memo(({ node }: NodeEditorProps) => {
 	const saveNodeName = () => {
 		if (!nodeNameRef.current) return;
 		node.data.name = nodeNameRef.current?.innerText;
-		updateName({
+		nodeNameRef.current.contentEditable = "false";
+		updateNode({
 			id: node.id,
 			task: node.data.task,
 			name: node.data.name,
@@ -212,7 +213,7 @@ export const NodeEditor = memo(({ node }: NodeEditorProps) => {
 						background: background ?? "#21212A",
 					}}
 				/>
-				<span ref={nodeNameRef} className="capitalize outline-none">
+				<span ref={nodeNameRef} className="outline-none">
 					{node.data.name}
 				</span>
 				<div className="ml-auto mr-1 cursor-pointer opacity-75">
