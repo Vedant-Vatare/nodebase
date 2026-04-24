@@ -25,6 +25,7 @@ type WorkflowExecutionStore = {
 	setShowExecutionUpdates: (state: boolean) => void;
 	nodeExecutionUpdates: Record<string, NodeExecutionUpdate>;
 	addNodeExecutionUpdate: (executionUpdate: NodeExecutionUpdate) => void;
+	clearExecutionUpdates: () => void;
 };
 
 export const useWorkflowStore = create<WorkflowStore>((set) => ({
@@ -61,5 +62,9 @@ export const useWorkflowExecutionStore = create<WorkflowExecutionStore>(
 					[executionUpdate.nodeId]: executionUpdate,
 				},
 			})),
+
+		clearExecutionUpdates: () => {
+			set({ showExecutionUpdates: false, nodeExecutionUpdates: {} });
+		},
 	}),
 );

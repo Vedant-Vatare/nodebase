@@ -3,7 +3,10 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ShineBorder } from "@/components/ui/shine-border";
 import { useExecuteWorkflow } from "@/queries/userWorkflows";
-import { useWorkflowStore } from "@/store/workflow/useWorkflowStore";
+import {
+	useWorkflowExecutionStore,
+	useWorkflowStore,
+} from "@/store/workflow/useWorkflowStore";
 
 const getTriggerExecutionType = (
 	task: string,
@@ -24,9 +27,13 @@ export const WorkflowExecuteButton = () => {
 	const requestExecutionTriggerFocus = useWorkflowStore(
 		(s) => s.requestExecutionTriggerFocus,
 	);
+	const clearExecutionUpdates = useWorkflowExecutionStore(
+		(s) => s.clearExecutionUpdates,
+	);
 	const { mutate: executeWorkflow } = useExecuteWorkflow();
 
 	const handleExecute = () => {
+		clearExecutionUpdates();
 		if (triggerNodes.length === 0) {
 			toast.info("Add a trigger node in canvas to execute workflow.");
 			return;

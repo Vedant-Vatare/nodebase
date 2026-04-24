@@ -40,7 +40,10 @@ export const WorkflowNode = memo(
 		const isTrigger = data.type === "trigger";
 
 		useEffect(() => {
-			if (!showExecutionUpdates) return;
+			if (!showExecutionUpdates) {
+				setExecutionState(null);
+				return;
+			}
 			const CurrentNodeUpdate = nodeExecutionUpdates[data.id];
 
 			if (!CurrentNodeUpdate) return;
