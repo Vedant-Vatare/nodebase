@@ -7,7 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import App from "./App";
 
-const router = createRouter({ routeTree });
+export const router = createRouter({ routeTree });
 
 declare module "@tanstack/react-router" {
 	interface Register {
