@@ -212,7 +212,6 @@ const handleSequentialNodeExecution = async (
 
 		if (preExecutionResult?.skipCurrent) {
 			currentNode = preExecutionResult.nextNode;
-			nodeConfigs = {};
 			continue;
 		}
 
