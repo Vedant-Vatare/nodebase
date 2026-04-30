@@ -97,8 +97,8 @@ export function createWorkflowNode(
 	return {
 		...data,
 		id: data.id,
-		positionX: canvasNode.position.x,
-		positionY: canvasNode.position.y,
+		positionX: Math.round(canvasNode.position.x),
+		positionY: Math.round(canvasNode.position.y),
 		description: data.description ?? "",
 		parameters: data.parameters ?? [],
 		inputPorts: data.inputPorts ?? [],

@@ -85,7 +85,7 @@ const Nodes = memo(() => {
 	const { getNodes, fitView, setNodes } = useReactFlow<WorkflowCanvasNode>();
 	const ALL_NODES = useSortedNodes();
 	const { mutate } = useAddWorkflowNode();
-		const handleAddNode = useCallback(
+	const handleAddNode = useCallback(
 		(apiNode: BaseNode) => {
 			const nodes = getNodes();
 			const last = nodes[nodes.length - 1];
@@ -104,7 +104,8 @@ const Nodes = memo(() => {
 			setNodes(resolvedNodes);
 			fitView({ padding: 20, duration: 300 });
 
-			const resolvedCanvasNode = resolvedNodes.find(n => n.id === canvasNode.id) || canvasNode;
+			const resolvedCanvasNode =
+				resolvedNodes.find((n) => n.id === canvasNode.id) || canvasNode;
 			const workflowNodeData = createWorkflowNode(resolvedCanvasNode);
 			mutate(workflowNodeData);
 		},
