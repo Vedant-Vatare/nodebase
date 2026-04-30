@@ -11,7 +11,7 @@ type WorkflowTriggerNode = {
 
 type WorkflowStore = {
 	selectedNode: WorkflowCanvasNode | null;
-	setSelectedNode: (node: WorkflowCanvasNode) => void;
+	setSelectedNode: (node: WorkflowCanvasNode | null) => void;
 	clearSelectedNode: () => void;
 	triggerNodes: WorkflowTriggerNode[];
 	setTriggerNodes: (nodes: WorkflowTriggerNode[]) => void;
@@ -20,6 +20,7 @@ type WorkflowStore = {
 	executionTriggerFocusRequestKey: number;
 	requestExecutionTriggerFocus: () => void;
 };
+
 type WorkflowExecutionStore = {
 	showExecutionUpdates: boolean;
 	setShowExecutionUpdates: (state: boolean) => void;
@@ -30,7 +31,7 @@ type WorkflowExecutionStore = {
 
 export const useWorkflowStore = create<WorkflowStore>((set) => ({
 	selectedNode: null,
-	setSelectedNode: (node: WorkflowCanvasNode) => set({ selectedNode: node }),
+	setSelectedNode: (node) => set({ selectedNode: node }),
 	clearSelectedNode: () => set({ selectedNode: null }),
 
 	triggerNodes: [],

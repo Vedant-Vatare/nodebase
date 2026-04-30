@@ -73,6 +73,7 @@ const WorkflowCanvas = () => {
 	);
 	const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 	const setTabOpen = useWorkflowSidbarTabsStore.getState().setTabOpen;
+	const selectedNode = useWorkflowStore((s) => s.selectedNode);
 	const setSelectedNode = useWorkflowStore((s) => s.setSelectedNode);
 	const setTriggerNodes = useWorkflowStore((s) => s.setTriggerNodes);
 	const executionTriggerFocusRequestKey = useWorkflowStore(
@@ -190,9 +191,10 @@ const WorkflowCanvas = () => {
 		(deletedNodes: WorkflowCanvasNode[]) => {
 			for (const canvasNode of deletedNodes) {
 				deleteNode({ id: canvasNode.data.id, workflowId });
+				if (selectedNode?.id === canvasNode.id) setSelectedNode(null);
 			}
 		},
-		[deleteNode, workflowId],
+		[deleteNode, workflowId, setSelectedNode, selectedNode?.id],
 	);
 
 	const saveNodePosition = useCallback(
