@@ -14,7 +14,7 @@ import { withAlpha } from "@/utils/colors";
 
 const getTriggerType = (task: string): "trigger" | "webhook" | "schedule" => {
 	if (task.includes("webhook")) return "webhook";
-	if (task.includes("cron") || task.includes("schedule")) return "schedule";
+
 	return "trigger";
 };
 
