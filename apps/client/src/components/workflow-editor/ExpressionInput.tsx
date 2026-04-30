@@ -107,6 +107,26 @@ export const ExpressionInput = ({
 		}
 	};
 
+	const handlePaste = (
+		_e: React.ClipboardEvent<HTMLInputElement & HTMLTextAreaElement>,
+	) => {
+		requestAnimationFrame(() => {
+			const el = inputRef.current;
+			if (!el) return;
+			const newValue = el.value;
+			onChange(newValue);
+
+			const cursor = el.selectionStart ?? newValue.length;
+			const active = getActiveExpression(newValue, cursor);
+			if (active !== null) {
+				setFilter(active);
+				setDropdownOpen(true);
+			} else {
+				setDropdownOpen(false);
+			}
+		});
+	};
+
 	const insertNode = useCallback(
 		(nodeName: string) => {
 			const el = inputRef.current;
@@ -208,6 +228,7 @@ export const ExpressionInput = ({
 						value={value}
 						placeholder={placeholder}
 						onChange={handleChange}
+						onPaste={handlePaste}
 						onKeyDown={handleKeyDown}
 						onScroll={syncScroll}
 						spellCheck={false}
